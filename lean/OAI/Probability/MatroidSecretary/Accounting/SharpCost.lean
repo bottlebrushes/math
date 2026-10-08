@@ -6,7 +6,7 @@ namespace OAI
 # Retaining the density-mask rate in the accounting budget
 
 In accounting.tex immediately after `eq:expected-cost`, the manuscript notes
-that the exact density-mask contribution is `1 / (4 * κ)`, although the proof
+that the exact density-mask contribution is `p_D / κ`, although the proof
 uses the more generous `1 / κ`.  This supplement proves that sharper inequality
 for the actual zero-extended cost, without conditioning on random listing.
 -/
@@ -47,15 +47,6 @@ theorem listedCost_le_sampled_true_counts (M : Matroid (Fin n)) (d : MainMasks n
   dsimp only [J] at hc hdiv
   linarith
 
-/-- The density mask is averaged at its original rate, independently of `H`. -/
-lemma mainMean_density_count (d : MainMasks n) (K : Finset (Fin n)) :
-    mainMean d (fun d' => ((d'.D ∩ K).card : ℝ)) = (1 / 4 : ℝ) * K.card := by
-  unfold mainMean tripleMaskExpectation MainAlgorithm.withMasks
-  simp only [fairParityExpectation_const, bitsExpectation_const]
-  simp_rw [Finset.inter_comm _ K]
-  rw [bitsExpectation_card_inter _ univ K (subset_univ _)]
-  simp [mul_comm]
-
 lemma mainMean_div (d : MainMasks n) (f : MainMasks n → ℝ) (c : ℝ) :
     mainMean d (fun d' => f d' / c) = mainMean d f / c := by
   simpa only [div_eq_mul_inv, mul_comm] using mainMean_mul d c⁻¹ f
@@ -74,12 +65,12 @@ theorem trueCost_le_sampled_true_counts (M : Matroid (Fin n)) (d : MainMasks n)
   · have hk : 0 < densityThreshold := constants_positive.2.1
     positivity
 
-/-- Source's sharper density contribution before relaxing `1/(4κ)` to `1/κ`. -/
+/-- Source's sharper density contribution before relaxing `p_D/κ` to `1/κ`. -/
 theorem expected_cost_sharp (M : Matroid (Fin n)) (d : MainMasks n)
     (w : Fin n → Option ℤ) (i : ℤ) :
     mainMean d (fun d' => trueCost M d' w i) ≤
       thinningRate * (trueGroup M d w i).card +
-        (thinningRate + 1 / (4 * densityThreshold)) * (higherTrueGroups M d w i).card := by
+        (thinningRate + densityRate / densityThreshold) * (higherTrueGroups M d w i).card := by
   have hm : mainMean d (fun d' => trueCost M d' w i) ≤
       mainMean d (fun d' => (d'.C ∩ trueGroup M d w i).card +
         (d'.C ∩ higherTrueGroups M d w i).card +
@@ -98,7 +89,7 @@ theorem expected_cost_sharp_sum (M : Matroid (Fin n)) (d : MainMasks n)
     (w : Fin n → Option ℤ) (i : ℤ) :
     mainMean d (fun d' => trueCost M d' w i) ≤
       thinningRate * (trueGroup M d w i).card +
-        (thinningRate + 1 / (4 * densityThreshold)) *
+        (thinningRate + densityRate / densityThreshold) *
           ∑ j ∈ trueLevels M w d.H with i < j, ((trueGroup M d w j).card : ℝ) := by
   rw [← higherTrueGroups_card_eq_sum M d w i]
   exact expected_cost_sharp M d w i

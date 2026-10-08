@@ -19,7 +19,7 @@ theorem safeEndpointCount_lower (M : Matroid α) (hE : M.E = Set.univ)
     (hG : Pairwise (fun i j => Disjoint (G i) (G j))) (q : α → ℝ)
     (hq0 : ∀ e, 0 ≤ q e) (hq1 : ∀ e, q e ≤ 1)
     (h : ℕ) (d : α) (hd : d ∉ M.closure ∅) :
-    (((2:ℝ)^12)⁻¹) / 2 ≤
+    exitMass ≤
       bitsExpectation q univ (fun C => bitsExpectation q univ (safeEndpointCount M hE κ D G h d C)) +
         if d ∈ densityExpansion M hE κ (D h) (M.closure ∅) then 1 else 0 := by
   let H := pathHorizon h
@@ -55,7 +55,7 @@ theorem safeEndpointCount_lower (M : Matroid α) (hE : M.E = Set.univ)
     have hn : H+1 = (H-1+1)+1 := by omega
     rw [hn, sum_range_succ, sum_range_succ, Nat.sub_add_cancel hH]
   have hsum := path_squared_exit_mass M hE κ D G hG q hq0 hq1 d hd h
-  change (((2:ℝ)^12)⁻¹)/2 ≤ ∑ i ∈ range (H+1), f i at hsum
+  change exitMass ≤ ∑ i ∈ range (H+1), f i at hsum
   rw [hsplit] at hsum
   have hfg := sum_le_sum (fun i hi => hvalid i hi)
   have heq : bitsExpectation q univ (fun C => bitsExpectation q univ (safeEndpointCount M hE κ D G h d C)) =
@@ -82,7 +82,7 @@ theorem safeCountBeforeParity_lower (M : Matroid α) (hE : M.E = Set.univ)
     (hG : Pairwise (fun i j => Disjoint (G i) (G j))) (q : α → ℝ)
     (hq0 : ∀ e, 0 ≤ q e) (hq1 : ∀ e, q e ≤ 1)
     (h : ℕ) (I : Finset α) (hI : M.Indep (I : Set α)) :
-    (((2:ℝ)^12)⁻¹) / 2 * I.card - (D h).ncard / (κ:ℝ) ≤
+    exitMass * I.card - (D h).ncard / (κ:ℝ) ≤
       bitsExpectation q univ (fun C => bitsExpectation q univ (safeCountBeforeParity M hE κ D G h I C)) := by
   let Q := densityExpansion M hE κ (D h) (M.closure ∅)
   have hsum := sum_le_sum (fun d hd => safeEndpointCount_lower M hE κ D G hG q hq0 hq1 h d (indep_not_loop M I hI hd))
@@ -103,7 +103,7 @@ theorem safeCountBeforeParity_lower (M : Matroid α) (hE : M.E = Set.univ)
   have hκ' : (0:ℝ) < κ := by exact_mod_cast hκ
   have hb'' : ((I.filter (fun d => d ∈ Q)).card : ℝ) ≤ (D h).ncard / (κ:ℝ) := (le_div_iff₀ hκ').mpr (by simpa [mul_comm] using hb')
   rw [sum_add_distrib] at hsum
-  change (∑ _ ∈ I, (((2:ℝ)^12)⁻¹)/2) ≤
+  change (∑ _ ∈ I, exitMass) ≤
     (∑ d ∈ I, bitsExpectation q univ (fun C => bitsExpectation q univ (safeEndpointCount M hE κ D G h d C))) +
       ∑ d ∈ I, if d ∈ Q then (1:ℝ) else 0 at hsum
   rw [hcount, ← hpre] at hsum

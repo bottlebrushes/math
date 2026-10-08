@@ -47,51 +47,80 @@ lemma binomialSum_le_exp (n d : ℕ) (κ : ℝ) (hκ : 1 ≤ κ) :
     _ = Real.exp ((d : ℝ) * Real.log κ + (n : ℝ) / κ) := by
       rw [Real.exp_add, Real.exp_nat_mul, Real.exp_log hkpos, div_eq_mul_inv, Real.exp_nat_mul]
 
-lemma residual_raw_count_le_exp (n q : ℕ) (κ : ℝ) (hκ : 2 ≤ κ)
+/-- Exponent of the sharpened residual-family count at density charge `κ`. -/
+noncomputable def residualExponent (κ : ℝ) : ℝ :=
+  (3 * (1 + Real.log κ) + 2 * (1 + Real.log (κ / 2)) + 3 * Real.log 4) / κ
+
+/-- Entropy bound for the sharpened count. -/
+theorem residual_sharp_product_le_exp (n q : ℕ) (κ : ℝ) (hκ : 2 ≤ κ)
     (hq : (q : ℝ) ≤ (n : ℝ) / κ) :
-    (((binomialSum n q) ^ 2 * (4 ^ (2 * q) * binomialSum n (2 * q)) ^ 2 : ℕ) : ℝ) ≤
-      Real.exp (1000 * Real.log κ / κ * n) := by
-  have hkone : 1 ≤ κ := by linarith
+    (((binomialSum n q) ^ 2 * (4 ^ q * binomialSum n q) *
+        (4 ^ (2 * q) * binomialSum n (2 * q)) : ℕ) : ℝ) ≤
+      Real.exp (residualExponent κ * n) := by
   have hkpos : 0 < κ := by linarith
-  have hlog : 0 ≤ Real.log κ := Real.log_nonneg hkone
-  have hloghalf : (1 : ℝ) / 2 ≤ Real.log κ := by
-    have htwo : (1 : ℝ) / 2 ≤ Real.log 2 := by
-      have h := Real.one_sub_inv_le_log_of_pos (by norm_num : (0 : ℝ) < 2)
-      norm_num at h ⊢
-      linarith
-    exact htwo.trans (Real.log_le_log (by norm_num) hκ)
-  have h4 : (4 : ℝ) ^ (2 * q) ≤ Real.exp (((4 * q : ℕ) : ℝ) * Real.log κ) := by
-    rw [Real.exp_nat_mul, Real.exp_log hkpos]
-    calc
-      (4 : ℝ) ^ (2 * q) = (2 : ℝ) ^ (4 * q) := by
-        rw [show (4 : ℝ) = 2 ^ 2 by norm_num, ← pow_mul]
-        congr 1
-        omega
-      _ ≤ κ ^ (4 * q) := pow_le_pow_left₀ (by norm_num) hκ _
-  have hs := binomialSum_le_exp n q κ hkone
-  have hs2 := binomialSum_le_exp n (2 * q) κ hkone
-  have hproduct := mul_le_mul h4 hs2 (by positivity) (Real.exp_nonneg _)
-  have hsquare := pow_le_pow_left₀ (by positivity) hs 2
-  have hproductsquare := pow_le_pow_left₀ (by positivity) hproduct 2
-  have hall := mul_le_mul hsquare hproductsquare (by positivity) (by positivity)
-  have hexp : (((binomialSum n q) ^ 2 * (4 ^ (2 * q) * binomialSum n (2 * q)) ^ 2 : ℕ) : ℝ) ≤
-      Real.exp (14 * (q : ℝ) * Real.log κ + 4 * ((n : ℝ) / κ)) := by
-    push_cast
-    convert hall using 1
-    rw [← Real.exp_add, ← Real.exp_nat_mul, ← Real.exp_nat_mul, ← Real.exp_add]
-    congr 1
-    push_cast
-    ring
-  apply hexp.trans (Real.exp_le_exp.mpr ?_)
-  have hqlog := mul_le_mul_of_nonneg_right hq hlog
-  have hn : (0 : ℝ) ≤ (n : ℝ) / κ := div_nonneg (Nat.cast_nonneg n) hkpos.le
-  have hnlog : 4 * ((n : ℝ) / κ) ≤ 8 * ((n : ℝ) / κ) * Real.log κ := by
-    nlinarith [mul_nonneg hn (sub_nonneg.mpr hloghalf)]
-  have hnlognonneg : 0 ≤ ((n : ℝ) / κ) * Real.log κ := mul_nonneg hn hlog
+  have hk1 : 1 ≤ κ := by linarith
+  have hk2 : 1 ≤ κ / 2 := by linarith
+  have hlogk : 0 ≤ Real.log κ := Real.log_nonneg hk1
+  have hlogk2 : 0 ≤ Real.log (κ / 2) := Real.log_nonneg hk2
+  have hlog4 : 0 ≤ Real.log 4 := Real.log_nonneg (by norm_num)
+  have hn : 0 ≤ (n : ℝ) / κ := by positivity
+  have hq0 : (0 : ℝ) ≤ q := Nat.cast_nonneg q
+  have h1 := binomialSum_le_exp n q κ hk1
+  have h2 := binomialSum_le_exp n (2 * q) (κ / 2) hk2
+  have h4 : ((4 : ℕ) : ℝ) ^ q = Real.exp ((q : ℝ) * Real.log 4) := by
+    rw [Real.exp_nat_mul, Real.exp_log (by norm_num)]
+    norm_num
+  have h4' : ((4 : ℕ) : ℝ) ^ (2 * q) = Real.exp (((2 * q : ℕ) : ℝ) * Real.log 4) := by
+    rw [Real.exp_nat_mul, Real.exp_log (by norm_num)]
+    norm_num
+  push_cast
+  have hb1 : (0 : ℝ) ≤ binomialSum n q := Nat.cast_nonneg _
+  have hb2 : (0 : ℝ) ≤ binomialSum n (2 * q) := Nat.cast_nonneg _
   calc
-    14 * (q : ℝ) * Real.log κ + 4 * ((n : ℝ) / κ)
-        ≤ 1000 * ((n : ℝ) / κ) * Real.log κ := by nlinarith
-    _ = 1000 * Real.log κ / κ * n := by ring
+    ((binomialSum n q : ℝ) ^ 2 * (4 ^ q * binomialSum n q) * (4 ^ (2 * q) * binomialSum n (2 * q)))
+        ≤ Real.exp ((q : ℝ) * Real.log κ + (n : ℝ) / κ) ^ 2 *
+            (Real.exp ((q : ℝ) * Real.log 4) * Real.exp ((q : ℝ) * Real.log κ + (n : ℝ) / κ)) *
+            (Real.exp (((2 * q : ℕ) : ℝ) * Real.log 4) *
+              Real.exp (((2 * q : ℕ) : ℝ) * Real.log (κ / 2) + (n : ℝ) / (κ / 2))) := by
+          have e4 : (4 : ℝ) ^ q = Real.exp ((q : ℝ) * Real.log 4) := by exact_mod_cast h4
+          have e4' : (4 : ℝ) ^ (2 * q) = Real.exp (((2 * q : ℕ) : ℝ) * Real.log 4) := by
+            exact_mod_cast h4'
+          rw [e4, e4']
+          gcongr
+    _ = Real.exp ((q : ℝ) * (3 * Real.log κ + 3 * Real.log 4 + 2 * Real.log (κ / 2)) +
+          (n : ℝ) / κ * 5) := by
+          rw [← Real.exp_nat_mul, ← Real.exp_add, ← Real.exp_add, ← Real.exp_add, ← Real.exp_add]
+          congr 1
+          push_cast
+          field_simp
+          ring
+    _ ≤ Real.exp (residualExponent κ * n) := by
+          apply Real.exp_le_exp.mpr
+          unfold residualExponent
+          have hqk : (q : ℝ) * (3 * Real.log κ + 3 * Real.log 4 + 2 * Real.log (κ / 2)) ≤
+              (n : ℝ) / κ * (3 * Real.log κ + 3 * Real.log 4 + 2 * Real.log (κ / 2)) :=
+            mul_le_mul_of_nonneg_right hq (by positivity)
+          have hrw : (3 * (1 + Real.log κ) + 2 * (1 + Real.log (κ / 2)) + 3 * Real.log 4) / κ * n =
+              (n : ℝ) / κ * (3 * Real.log κ + 3 * Real.log 4 + 2 * Real.log (κ / 2)) +
+                (n : ℝ) / κ * 5 := by
+            field_simp
+            ring
+          rw [hrw]
+          nlinarith
+
+/-- The sharpened residual exponent at `κ = 2^12`. -/
+theorem residualExponent_charge :
+    residualExponent (2 ^ 12) = (5 + 64 * Real.log 2) / 4096 := by
+  unfold residualExponent
+  have h1 : Real.log ((2 : ℝ) ^ 12) = 12 * Real.log 2 := by rw [Real.log_pow]; norm_num
+  have h2 : Real.log ((2 : ℝ) ^ 12 / 2) = 11 * Real.log 2 := by
+    rw [show ((2 : ℝ) ^ 12 / 2) = 2 ^ 11 by norm_num, Real.log_pow]; norm_num
+  have h3 : Real.log (4 : ℝ) = 2 * Real.log 2 := by
+    rw [show (4 : ℝ) = 2 ^ 2 by norm_num, Real.log_pow]; norm_num
+  rw [h1, h2, h3]
+  norm_num
+  ring
+
 
 end MatroidProphet.Pivots
 

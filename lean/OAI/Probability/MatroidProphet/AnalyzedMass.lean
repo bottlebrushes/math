@@ -53,7 +53,7 @@ lemma small_comparison_mass (M : Matroid (Fin n)) (hE : M.E = Set.univ)
     (w : Weights n) (H : Finset (Fin n)) :
     comparisonMass M (fun e => roundedLevel weightBase (w e)) H ≤
       analyzedComparisonMass M (fun e => roundedLevel weightBase (w e)) H +
-        2 * densityThreshold * maximumRounded M w := by
+        densityThreshold * (weightBase / (weightBase - 1)) * maximumRounded M w := by
   classical
   let a : Fin n → Option ℤ := fun e => roundedLevel weightBase (w e)
   let Y := positiveGreedy M a \ H

@@ -69,7 +69,7 @@ lemma roundedMaximum_worst_mask {n bits : ℕ} (M : Matroid (Fin n))
   exact (seedSet_setSeed _).symm
 
 lemma maximumPayoff_eq_masks {n : ℕ} (M : Matroid (Fin n)) (w : Weights n) :
-    maximumPayoff M w = bitsExpectation (fun _ => (1/2 : ℝ)) Finset.univ (maximumForMask M w) := by
+    maximumPayoff M w = bitsExpectation (fun _ => filterRate) Finset.univ (maximumForMask M w) := by
   exact integral_bernoulliSeedLaw _ _ _ _
 
 end MatroidProphet

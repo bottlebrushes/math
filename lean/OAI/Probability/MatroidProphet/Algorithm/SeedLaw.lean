@@ -49,13 +49,23 @@ instance maskCoinLaw_probability (n : ℕ) (p : ℝ) (h0 : 0 ≤ p) (h1 : p ≤ 
   unfold maskCoinLaw
   infer_instance
 
+/-- Rates of the two final seed bits: the branch bit has rate `r`, the parity bit is fair. -/
+noncomputable def lastCoinRate (r : ℝ) : Fin 2 → ℝ := fun j => if j = 0 then r else 1 / 2
+
+lemma lastCoinRate_nonneg {r : ℝ} (h0 : 0 ≤ r) (j : Fin 2) : 0 ≤ lastCoinRate r j := by
+  unfold lastCoinRate; split_ifs <;> norm_num [h0]
+
+lemma lastCoinRate_le_one {r : ℝ} (h1 : r ≤ 1) (j : Fin 2) : lastCoinRate r j ≤ 1 := by
+  unfold lastCoinRate; split_ifs <;> norm_num [h1]
+
 noncomputable def mainBlockLaw (n : ℕ) (q : Fin 5 → ℝ)
     (h0 : ∀ j, 0 ≤ q j) (h1 : ∀ j, q j ≤ 1) : Measure (MainSeedBlocks n) :=
   (maskCoinLaw n (q 0) (h0 0) (h1 0)).prod
     ((maskCoinLaw n (q 1) (h0 1) (h1 1)).prod
       ((maskCoinLaw n (q 2) (h0 2) (h1 2)).prod
         ((maskCoinLaw n (q 3) (h0 3) (h1 3)).prod
-          (maskCoinLaw 2 (q 4) (h0 4) (h1 4)))))
+          (bernoulliSeedLaw (lastCoinRate (q 4)) (lastCoinRate_nonneg (h0 4))
+            (lastCoinRate_le_one (h1 4))))))
 
 instance mainBlockLaw_probability (n : ℕ) (q : Fin 5 → ℝ)
     (h0 : ∀ j, 0 ≤ q j) (h1 : ∀ j, q j ≤ 1) :
@@ -76,7 +86,8 @@ lemma integral_mainSeedLaw (n : ℕ) (q : Fin 5 → ℝ)
     (h0 : ∀ j, 0 ≤ q j) (h1 : ∀ j, q j ≤ 1) (f : Seed (mainSeedBits n) → ℝ) :
     (∫ r, f r ∂mainSeedLaw n q h0 h1) =
       ∫ H, ∫ D, ∫ C, ∫ T, ∫ b, f (encodeMainSeed (H, D, C, T, b))
-        ∂maskCoinLaw 2 (q 4) (h0 4) (h1 4)
+        ∂bernoulliSeedLaw (lastCoinRate (q 4)) (lastCoinRate_nonneg (h0 4))
+          (lastCoinRate_le_one (h1 4))
         ∂maskCoinLaw n (q 3) (h0 3) (h1 3)
         ∂maskCoinLaw n (q 2) (h0 2) (h1 2)
         ∂maskCoinLaw n (q 1) (h0 1) (h1 1)
@@ -105,7 +116,7 @@ lemma mainSeedLaw_expectation (n : ℕ) (q : Fin 5 → ℝ)
         bitsExpectation (fun _ : Fin n => q 1) Finset.univ (fun D =>
           bitsExpectation (fun _ : Fin n => q 2) Finset.univ (fun C =>
             bitsExpectation (fun _ : Fin n => q 3) Finset.univ (fun T =>
-              bitsExpectation (fun _ : Fin 2 => q 4) Finset.univ (fun b =>
+              bitsExpectation (lastCoinRate (q 4)) Finset.univ (fun b =>
                 f (encodeMainSeed (setSeed H, setSeed D, setSeed C, setSeed T, setSeed b))))))) := by
   rw [integral_mainSeedLaw]
   simp only [maskCoinLaw, integral_bernoulliSeedLaw]

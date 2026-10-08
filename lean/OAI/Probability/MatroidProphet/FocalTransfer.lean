@@ -82,35 +82,35 @@ lemma focalTransferGap_expectation_le (M : Matroid (Fin n)) (hE : M.E = Set.univ
     (d : MainMasks n) (s : Fin n → Option ℤ) (i : ℤ) (Y : Set (Fin n))
     (hY : Y ⊆ (trueGroup M d s i : Set (Fin n)))
     (hn : densityThreshold ≤ ((trueGroup M d s i).card : ℝ)) (ε : Fin 2) :
-    tripleMaskExpectation (fun _ => (1:ℝ)/4) (fun _ => thinningRate) (fun _ => thinningRate)
+    tripleMaskExpectation (fun _ => densityRate) (fun _ => thinningRate) (fun _ => thinningRate)
       (trueGroup M d s i) (fun A B C =>
-        listedTransferGap M hE (2^100) (focalMasks d (trueGroup M d s i) A B C) s i Y ε) ≤
-      2 * residualDelta * (trueGroup M d s i).card := by
+        listedTransferGap M hE (2^12) (focalMasks d (trueGroup M d s i) A B C) s i Y ε) ≤
+      (residualDelta + residualTail) * (trueGroup M d s i).card := by
   have ht0 : 0 ≤ thinningRate := constants_positive.2.2.1.le
   have ht1 : thinningRate ≤ 1 := by norm_num [thinningRate]
-  have hu : (1:ℝ)/4 + (1-(1:ℝ)/4)*thinningRate ≤ 1/2 := by norm_num [thinningRate]
+  have hu : densityRate + (1 - densityRate) * thinningRate ≤ 1/2 := maskUnion_le_half
   have hne : (trueGroup M d s i).Nonempty := by
     apply card_pos.mp
     have hp := lt_of_lt_of_le constants_positive.2.1 hn
     exact_mod_cast hp
-  apply tripleMask_residual_error_le (fun _ => (1:ℝ)/4) (fun _ => thinningRate)
-    (fun _ => thinningRate) (fun _ => by norm_num) (fun _ => by norm_num)
+  apply tripleMask_residual_error_le (fun _ => densityRate) (fun _ => thinningRate)
+    (fun _ => thinningRate) (fun _ => by norm_num [densityRate]) (fun _ => by norm_num [densityRate])
     (fun _ => ht0) (fun _ => ht1) (fun _ => ht0) (fun _ => ht1) (fun _ => hu)
-    (trueGroup M d s i) (focalResidualFamily M hE (2^100) d s i ε)
+    (trueGroup M d s i) (focalResidualFamily M hE (2^12) d s i ε)
   · exact labeledResidualFamily_subsets M _ _ _ _ ε _
-  · have hc := labeledResidualFamily_card M hE (trueGroup M d s i) hne (2^100)
-        (by norm_num) (guardedPath M hE (2^100)
+  · have hc := labeledResidualFamily_card M hE (trueGroup M d s i) hne (2^12)
+        (by norm_num) (guardedPath M hE (2^12)
           (groupMask M (focalReference M d s i) s (focalReference M d s i).D)
           (groupMask M (focalReference M d s i) s (focalReference M d s i).C) (focalIndex M d s i))
         (activation (focalIndex M d s i)) ε
-        (fun b => lowerCompetition M hE (2^100)
+        (fun b => lowerCompetition M hE (2^12)
           (groupMask M (focalReference M d s i) s (focalReference M d s i).D)
           (groupMask M (focalReference M d s i) s (focalReference M d s i).C)
           (groupMask M (focalReference M d s i) s (focalReference M d s i).T) b.val.val (focalIndex M d s i))
     simpa only [Nat.cast_pow, Nat.cast_ofNat, densityThreshold, focalResidualFamily] using hc
-  · exact hn
+  · simpa only [densityThreshold] using hn
   · intro A hA B hB C hC
-    exact listedTransferGap_focal_le M hE (2^100) (by positivity) d s i Y hY ε A B C hA hB hC
+    exact listedTransferGap_focal_le M hE (2^12) (by positivity) d s i Y hY ε A B C hA hB hC
 
 end MatroidProphet.MainAlgorithm
 

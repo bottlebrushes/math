@@ -62,12 +62,12 @@ theorem candidate_mass {n : ℕ} (M : Matroid (Fin n)) (hE : M.E = Set.univ)
         Finset (Fin n)) : Set (Fin n)) ∧
       positiveGreedy M (fun e => roundedLevel B (w e)) \ H ⊆
         candidateLabels M (fun e => roundedLevel B (w e)) H) ∧
-    bitsExpectation (fun _ => (1 / 2 : ℝ)) Finset.univ
+    bitsExpectation (fun _ => filterRate) Finset.univ
       (fun H => ∑ e ∈ positiveGreedy M (fun e => roundedLevel B (w e)) \ H,
-        roundedWeight B (w e)) = optimum M (fun e => roundedWeight B (w e)) / 2 ∧
-    bitsExpectation (fun _ => (1 / 2 : ℝ)) Finset.univ
+        roundedWeight B (w e)) = (1 - filterRate) * optimum M (fun e => roundedWeight B (w e)) ∧
+    filterRate * bitsExpectation (fun _ => filterRate) Finset.univ
       (fun H => ∑ e ∈ candidateLabels M (fun e => roundedLevel B (w e)) H,
-        roundedWeight B (w e)) ≤ optimum M (fun e => roundedWeight B (w e)) := by
+        roundedWeight B (w e)) ≤ (1 - filterRate) * optimum M (fun e => roundedWeight B (w e)) := by
   refine ⟨?_, expectation_positiveGreedy_survivors M hE w hB,
     expectation_candidateLabels_le_optimum M hE w B⟩
   intro H

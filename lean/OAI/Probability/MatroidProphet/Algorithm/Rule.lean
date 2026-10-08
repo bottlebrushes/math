@@ -56,12 +56,12 @@ def groupMask (M : Matroid (Fin n)) (d : MainMasks n) (seen : Fin n → Option �
 
 noncomputable def finalPath (M : Matroid (Fin n)) (hE : M.E = Set.univ)
     (d : MainMasks n) (seen : Fin n → Option ℤ) : ℤ → Set (Fin n) :=
-  guardedPath M hE (2^100) (groupMask M d seen d.D) (groupMask M d seen d.C)
+  guardedPath M hE (2^12) (groupMask M d seen d.D) (groupMask M d seen d.C)
     (groups M d seen).length
 
 noncomputable def birth (M : Matroid (Fin n)) (hE : M.E = Set.univ)
     (d : MainMasks n) (seen : Fin n → Option ℤ) (e : Fin n) (i : ℤ) : ℤ :=
-  nominalBirth M hE (2^100) (groupMask M d seen d.D) (groupMask M d seen d.C)
+  nominalBirth M hE (2^12) (groupMask M d seen d.D) (groupMask M d seen d.C)
     ((groups M d seen).idxOf i) e
 
 def eligible (M : Matroid (Fin n)) (hE : M.E = Set.univ)

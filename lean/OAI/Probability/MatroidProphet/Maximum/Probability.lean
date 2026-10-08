@@ -29,13 +29,13 @@ lemma expectation_mem (q : Fin n → ℝ) (V : Finset (Fin n))
       rw [bitsExpectation_insert q _ e (by simp), hno, hyes]
       ring
 
-lemma expectation_top_two_event (V : Finset (Fin n)) (g h : Fin n)
+lemma expectation_top_two_event (p : ℝ) (V : Finset (Fin n)) (g h : Fin n)
     (hg : g ∈ V) (hh : h ∈ V) (hgh : g ≠ h) (c : ℝ) :
-    bitsExpectation (fun _ => (1 / 2 : ℝ)) V
-      (fun H => if g ∈ H then 0 else if h ∈ H then c else 0) = c / 4 := by
-  let q : Fin n → ℝ := fun _ => 1 / 2
+    bitsExpectation (fun _ => p) V
+      (fun H => if g ∈ H then 0 else if h ∈ H then c else 0) = p * (1 - p) * c := by
+  let q : Fin n → ℝ := fun _ => p
   have hno : bitsExpectation q (V.erase g)
-      (fun H => if g ∈ H then 0 else if h ∈ H then c else 0) = (1 / 2 : ℝ) * c := by
+      (fun H => if g ∈ H then 0 else if h ∈ H then c else 0) = p * c := by
     calc
       _ = bitsExpectation q (V.erase g) (fun H => if h ∈ H then c else 0) := by
         apply bitsExpectation_congr
@@ -53,38 +53,37 @@ lemma expectation_top_two_event (V : Finset (Fin n)) (g h : Fin n)
   dsimp [q]
   ring
 
-theorem maximum_expectation_two (V : Finset (Fin n)) (g h : Fin n)
+theorem maximum_expectation_two (p : ℝ) (hp0 : 0 ≤ p) (hp1 : p ≤ 1)
+    (V : Finset (Fin n)) (g h : Fin n)
     (hg : g ∈ V) (hh : h ∈ V) (hgh : g ≠ h)
     (F : Finset (Fin n) → ℝ) (c : ℝ)
     (hF : ∀ H ⊆ V, 0 ≤ F H)
     (hsuccess : ∀ H ⊆ V, g ∉ H → h ∈ H → c ≤ F H) :
-    c / 4 ≤ bitsExpectation (fun _ => (1 / 2 : ℝ)) V F := by
-  rw [← expectation_top_two_event V g h hg hh hgh c]
-  apply bitsExpectation_mono _ (fun _ => by norm_num) (fun _ => by norm_num)
+    p * (1 - p) * c ≤ bitsExpectation (fun _ => p) V F := by
+  rw [← expectation_top_two_event p V g h hg hh hgh c]
+  apply bitsExpectation_mono _ (fun _ => hp0) (fun _ => hp1)
   intro H hH
   split_ifs with hgH hhH
   · exact hF H hH
   · exact hsuccess H hH hgH hhH
   · exact hF H hH
 
-theorem maximum_expectation_one (V : Finset (Fin n)) (g : Fin n) (hg : g ∈ V)
+theorem maximum_expectation_one (p : ℝ) (hp0 : 0 ≤ p) (hp1 : p ≤ 1)
+    (V : Finset (Fin n)) (g : Fin n) (hg : g ∈ V)
     (F : Finset (Fin n) → ℝ) (c : ℝ) (hc : 0 ≤ c)
     (hF : ∀ H ⊆ V, 0 ≤ F H)
     (hsuccess : ∀ H ⊆ V, g ∉ H → c ≤ F H) :
-    c / 4 ≤ bitsExpectation (fun _ => (1 / 2 : ℝ)) V F := by
-  have hhalf : c / 2 ≤ bitsExpectation (fun _ => (1 / 2 : ℝ)) V F := by
-    have hevent := Candidates.expectation_not_mem (fun _ => (1 / 2 : ℝ)) V g hg c
-    have hevent' : bitsExpectation (fun _ => (1 / 2 : ℝ)) V
-        (fun H => if g ∉ H then c else 0) = c / 2 := by
-      rw [hevent]
-      ring
-    rw [← hevent']
-    apply bitsExpectation_mono _ (fun _ => by norm_num) (fun _ => by norm_num)
+    p * (1 - p) * c ≤ bitsExpectation (fun _ => p) V F := by
+  have hhalf : (1 - p) * c ≤ bitsExpectation (fun _ => p) V F := by
+    have hevent := Candidates.expectation_not_mem (fun _ => p) V g hg c
+    rw [← hevent]
+    apply bitsExpectation_mono _ (fun _ => hp0) (fun _ => hp1)
     intro H hH
     by_cases hgH : g ∈ H
     · simpa only [hgH, not_true_eq_false, ite_false] using hF H hH
     · simpa only [hgH, not_false_eq_true, ite_true] using hsuccess H hH hgH
-  linarith
+  have h1 : 0 ≤ (1 - p) * c := mul_nonneg (by linarith) hc
+  nlinarith
 
 end MatroidProphet.Maximum
 

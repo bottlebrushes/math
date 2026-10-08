@@ -122,6 +122,61 @@ theorem reverse_low_hazard_lt_half (M : Matroid α) (hE : M.E = Set.univ)
   intro i hi
   exact dyadic_band_hazard_bound M hE κ D G n hG q hq0 hq1 d h hh (12+i) m k S closed
 
+/-- The low-hazard estimate with its exact dyadic tail potential (paper Lemma 4.2, level 12). -/
+theorem reverse_low_hazard_le_potential (M : Matroid α) (hE : M.E = Set.univ)
+    (κ : ℕ) (D : ℕ → Set α) (G : ℕ → Finset α) (n : ℕ)
+    (hG : Pairwise (fun i j => Disjoint (G i) (G j))) (q : α → ℝ)
+    (hq0 : ∀ e, 0 ≤ q e) (hq1 : ∀ e, q e ≤ 1)
+    (d : α) (h : ℕ) (hh : h ≤ n)
+    (m : ℕ) (k : ℤ) (S : ℕ → Set α) (closed : ReverseClosed M hE κ D k S) :
+    reverseMeanCost M hE κ D G n q
+      (lowHazardCost M hE κ D G q d h (((2:ℝ)^12)⁻¹)) m k S ≤
+      hazardTailPotential 12 := by
+  let R := traceHazards M hE κ D G n q d h m k S
+  obtain ⟨N, hN⟩ := finite_hazard_cover (fun p : {p : ℝ // p ∈ R} => p.val)
+  let B : ℕ → ℤ → (ℕ → Set α) → (ℕ → Set α) → ℝ := fun i =>
+    bandHazardCost M hE κ D G q d h (((2:ℝ)^(12+i+1))⁻¹) (((2:ℝ)^(12+i))⁻¹)
+  have hB (i : ℕ) (t : ReverseTransition α) : 0 ≤ B i t.time t.before t.after := by
+    dsimp only [B, bandHazardCost]
+    split_ifs
+    · exact reverseHazard_nonneg M hE κ D G q hq0 hq1 d h _ _
+    · exact le_rfl
+  have hpoint (C : Finset α) :
+      reverseCost M hE κ D G n (lowHazardCost M hE κ D G q d h (((2:ℝ)^12)⁻¹)) m k S C ≤
+        ∑ i ∈ range N, reverseCost M hE κ D G n (B i) m k S C := by
+    rw [← reverseCost_sum]
+    apply reverseCost_le_of_trace
+    intro t ht
+    dsimp only [lowHazardCost]
+    by_cases hs : d ∈ t.before h ∧ reverseHazard M hE κ D G q d h t.time t.before < ((2:ℝ)^12)⁻¹
+    · rw [ite_eq_left hs]
+      have hp0 := reverseHazard_nonneg M hE κ D G q hq0 hq1 d h t.time t.before
+      by_cases hz : reverseHazard M hE κ D G q d h t.time t.before = 0
+      · rw [hz]
+        exact sum_nonneg (fun i hi => hB i t)
+      · have hp : 0 < reverseHazard M hE κ D G q d h t.time t.before := lt_of_le_of_ne hp0 (Ne.symm hz)
+        have hm : reverseHazard M hE κ D G q d h t.time t.before ∈ R :=
+          mem_traceHazards M hE κ D G n q d h m k S C t ht
+        obtain ⟨i, hi, hband⟩ := hN ⟨_, hm⟩ hp hs.2
+        unfold inHazardBand at hband
+        have heq : B i t.time t.before t.after = reverseHazard M hE κ D G q d h t.time t.before := by
+          simp only [B, bandHazardCost, hband.1, hband.2, hs.1, true_and, ite_true]
+        rw [← heq]
+        exact single_le_sum (fun j hj => hB j t) hi
+    · rw [ite_eq_right hs]
+      exact sum_nonneg (fun i hi => hB i t)
+  have hmean : reverseMeanCost M hE κ D G n q
+      (lowHazardCost M hE κ D G q d h (((2:ℝ)^12)⁻¹)) m k S ≤
+      ∑ i ∈ range N, reverseMeanCost M hE κ D G n q (B i) m k S := by
+    unfold reverseMeanCost
+    rw [← bitsExpectation_sum]
+    exact bitsExpectation_mono q hq0 hq1 univ (fun C _ => hpoint C)
+  apply le_trans hmean
+  apply le_trans (sum_le_sum (fun i hi => dyadic_band_hazard_bound M hE κ D G n hG q hq0 hq1 d h hh (12+i) m k S closed))
+  have hs := hazardBandBound_sum 12 N
+  linarith [hazardTailPotential_nonneg (12 + N)]
+
+
 end MatroidProphet
 
 end OAI

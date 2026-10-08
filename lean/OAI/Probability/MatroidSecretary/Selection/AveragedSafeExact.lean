@@ -29,14 +29,14 @@ theorem listedSafeStatistic_averaged_exact
     (Y : Set (Fin n)) (hY : Y ⊆ (trueGroup M d s i : Set (Fin n)))
     (hI : M.Indep Y) (q : Fin n → ℝ)
     (hq0 : ∀ e, 0 ≤ q e) (hq1 : ∀ e, q e ≤ 1) :
-    retainedFraction * Y.ncard - (trueGroup M d s i).card / (4 * (κ : ℝ)) ≤
-      tripleMaskExpectation (fun _ => (1 : ℝ) / 4) q q univ (fun D C T =>
+    retainedFraction * Y.ncard - densityRate * (trueGroup M d s i).card / (κ : ℝ) ≤
+      tripleMaskExpectation (fun _ => densityRate) q q univ (fun D C T =>
         fairParityExpectation (fun p =>
           (listedSafeStatistic M hE κ (withMasks d D C T) s i Y
             (boolParity p) : ℝ))) := by
   classical
   have hfixed (D : Finset (Fin n)) :
-      exitThreshold / 4 * ((D : Set (Fin n)) ∩ Y).ncard -
+      exitMass / 2 * ((D : Set (Fin n)) ∩ Y).ncard -
           (D ∩ trueGroup M d s i).card / (κ : ℝ) ≤
         bitsExpectation q univ (fun C => bitsExpectation q univ (fun T =>
           fairParityExpectation (fun p =>
@@ -44,43 +44,44 @@ theorem listedSafeStatistic_averaged_exact
               (boolParity p) : ℝ)))) :=
     listedSafeStatistic_exact_density M hE κ hκ (withMasks d D ∅ ∅)
       s i Y hY hI q hq0 hq1
-  have hmean := bitsExpectation_mono (fun _ : Fin n => (1 : ℝ) / 4)
-    (by intro e; norm_num) (by intro e; norm_num) univ (fun D _ => hfixed D)
-  have hcardY : bitsExpectation (fun _ : Fin n => (1 : ℝ) / 4) univ
-      (fun D => (((D : Set (Fin n)) ∩ Y).ncard : ℝ)) = Y.ncard / 4 := by
+  have hmean := bitsExpectation_mono (fun _ : Fin n => densityRate)
+    (by intro e; norm_num [densityRate]) (by intro e; norm_num [densityRate]) univ
+    (fun D _ => hfixed D)
+  have hcardY : bitsExpectation (fun _ : Fin n => densityRate) univ
+      (fun D => (((D : Set (Fin n)) ∩ Y).ncard : ℝ)) = densityRate * Y.ncard := by
     have hset (D : Finset (Fin n)) : (D : Set (Fin n)) ∩ Y =
         ((Y.toFinset ∩ D : Finset (Fin n)) : Set (Fin n)) := by
       ext e
       simp only [Set.mem_inter_iff, Finset.mem_coe, mem_inter, Set.mem_toFinset]
       exact and_comm
     simp only [hset, Set.ncard_coe_finset]
-    rw [bitsExpectation_card_inter (fun _ : Fin n => (1 : ℝ) / 4)
+    rw [bitsExpectation_card_inter (fun _ : Fin n => densityRate)
       univ Y.toFinset (subset_univ _)]
     simp only [sum_const, nsmul_eq_mul, ← Set.ncard_eq_toFinset_card']
     ring
-  have hcardU : bitsExpectation (fun _ : Fin n => (1 : ℝ) / 4) univ
+  have hcardU : bitsExpectation (fun _ : Fin n => densityRate) univ
       (fun D => ((D ∩ trueGroup M d s i).card : ℝ)) =
-        (trueGroup M d s i).card / 4 := by
-    simpa [Finset.inter_comm, div_eq_mul_inv] using
-      bitsExpectation_card_inter (fun _ : Fin n => (1 : ℝ) / 4)
+        densityRate * (trueGroup M d s i).card := by
+    simpa [Finset.inter_comm, mul_comm] using
+      bitsExpectation_card_inter (fun _ : Fin n => densityRate)
         univ (trueGroup M d s i) (subset_univ _)
-  have heq : bitsExpectation (fun _ : Fin n => (1 : ℝ) / 4) univ
-      (fun D => exitThreshold / 4 * ((D : Set (Fin n)) ∩ Y).ncard -
+  have heq : bitsExpectation (fun _ : Fin n => densityRate) univ
+      (fun D => exitMass / 2 * ((D : Set (Fin n)) ∩ Y).ncard -
         (D ∩ trueGroup M d s i).card / (κ : ℝ)) =
-      retainedFraction * Y.ncard - (trueGroup M d s i).card / (4 * (κ : ℝ)) := by
+      retainedFraction * Y.ncard - densityRate * (trueGroup M d s i).card / (κ : ℝ) := by
     calc
-      _ = bitsExpectation (fun _ : Fin n => (1 : ℝ) / 4) univ
-          (fun D => exitThreshold / 4 * ((D : Set (Fin n)) ∩ Y).ncard +
+      _ = bitsExpectation (fun _ : Fin n => densityRate) univ
+          (fun D => exitMass / 2 * ((D : Set (Fin n)) ∩ Y).ncard +
             (-(κ : ℝ)⁻¹) * (D ∩ trueGroup M d s i).card) := by
         apply bitsExpectation_congr
         intro D _
         ring
-      _ = exitThreshold / 4 * (Y.ncard / 4) +
-          (-(κ : ℝ)⁻¹) * ((trueGroup M d s i).card / 4) := by
+      _ = exitMass / 2 * (densityRate * Y.ncard) +
+          (-(κ : ℝ)⁻¹) * (densityRate * (trueGroup M d s i).card) := by
         rw [bitsExpectation_add, bitsExpectation_mul_const,
           bitsExpectation_mul_const, hcardY, hcardU]
       _ = _ := by
-        norm_num [exitThreshold, retainedFraction]
+        rw [retainedFraction_eq]
         ring
   rw [heq] at hmean
   exact hmean
@@ -93,24 +94,24 @@ theorem averaged_safe_sampled_labels
     (d : MainMasks n) (s : Fin n → Option ℤ) (i : ℤ)
     (Y : Set (Fin n)) (hI : M.Indep Y) :
     retainedFraction * (Y ∩ (trueGroup M d s i : Set (Fin n))).ncard -
-        (trueGroup M d s i).card / (4 * densityThreshold) ≤
-      tripleMaskExpectation (fun _ => (1 : ℝ) / 4)
+        densityRate * (trueGroup M d s i).card / densityThreshold ≤
+      tripleMaskExpectation (fun _ => densityRate)
         (fun _ => thinningRate) (fun _ => thinningRate) univ (fun D C T =>
           fairParityExpectation (fun p =>
-            (listedSafeStatistic M hE (2 ^ 100) (withMasks d D C T) s i Y
+            (listedSafeStatistic M hE (2^12) (withMasks d D C T) s i Y
               (boolParity p) : ℝ))) := by
-  have hs := listedSafeStatistic_averaged_exact M hE (2 ^ 100) (by positivity)
+  have hs := listedSafeStatistic_averaged_exact M hE (2^12) (by positivity)
     d s i (Y ∩ (trueGroup M d s i : Set (Fin n))) Set.inter_subset_right
     (hI.subset Set.inter_subset_left) (fun _ => thinningRate)
     (fun _ => constants_positive.2.2.1.le)
     (fun _ => by norm_num [thinningRate])
   have heq (D C T : Finset (Fin n)) (p : Bool) :
-      listedSafeStatistic M hE (2 ^ 100) (withMasks d D C T) s i
+      listedSafeStatistic M hE (2^12) (withMasks d D C T) s i
         (Y ∩ (trueGroup M d s i : Set (Fin n))) (boolParity p) =
-      listedSafeStatistic M hE (2 ^ 100) (withMasks d D C T) s i Y
+      listedSafeStatistic M hE (2^12) (withMasks d D C T) s i Y
         (boolParity p) := by
     simpa only [trueGroup_withMasks] using
-      listedSafeStatistic_inter_trueGroup M hE (2 ^ 100)
+      listedSafeStatistic_inter_trueGroup M hE (2^12)
         (withMasks d D C T) s i Y (boolParity p)
   simpa only [Nat.cast_pow, Nat.cast_ofNat, densityThreshold, heq] using hs
 

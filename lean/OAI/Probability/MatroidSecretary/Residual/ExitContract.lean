@@ -121,7 +121,7 @@ theorem exit_mass (M : Matroid α) (hE : M.E = Set.univ)
         d ∈ t.before h ∧ d ∉ t.after h ∧
           reverseHazard M hE κ D G q d h t.time t.before < exitThreshold
       then (1 : ℝ) else 0) < 1 / 2 ∧
-    exitThreshold / 2 ≤ ∑ i ∈ range (pathHorizon h + 1),
+    exitMass ≤ ∑ i ∈ range (pathHorizon h + 1),
       bitsExpectation q univ (pathExitSquare M hE κ D G q d h i) := by
   refine ⟨?_, ?_, ?_⟩
   · intro C
@@ -151,7 +151,7 @@ theorem exit_mass_actual (M : Matroid α) (hE : M.E = Set.univ)
         d ∈ t.before h ∧ d ∉ t.after h ∧
           reverseHazard M hE κ D G q d h t.time t.before < exitThreshold
       then (1 : ℝ) else 0) < 1 / 2 ∧
-    exitThreshold / 2 ≤ ∑ i ∈ range (pathHorizon h + 1),
+    exitMass ≤ ∑ i ∈ range (pathHorizon h + 1),
       bitsExpectation q univ (pathExitSquare M hE κ D G q d h i) := by
   exact ⟨nonloop_exits M hE κ D G hG d hd h,
     (exit_mass M hE κ D G hG q hq0 hq1 d hd h).2⟩

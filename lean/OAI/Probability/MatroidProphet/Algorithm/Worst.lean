@@ -8,9 +8,9 @@ namespace MatroidProphet
 open Finset
 
 lemma cumulative_option_weight_bound {α : Type*} [DecidableEq α]
-    (B : ℝ) (hB : 2 ≤ B) (A : Finset α) (level : α → Option ℤ) (analyzed : Finset ℤ) :
+    (B : ℝ) (hB : 1 < B) (A : Finset α) (level : α → Option ℤ) (analyzed : Finset ℤ) :
     (∑ i ∈ analyzed, B ^ i * ((A.filter (fun e => ∃ j, level e = some j ∧ i ≤ j)).card : ℝ)) ≤
-      2 * ∑ e ∈ A, levelWeight B (level e) := by
+      B / (B - 1) * ∑ e ∈ A, levelWeight B (level e) := by
   classical
   let P := A.filter (fun e => level e ≠ none)
   have hfilter (i : ℤ) : P.filter (fun e => i ≤ (level e).getD 0) =
@@ -54,7 +54,7 @@ lemma mainWorstRounded_nonneg (M : Matroid (Fin n)) (hE : M.E = Set.univ)
 
 lemma weighted_trueLambda_le_selection (M : Matroid (Fin n)) (hE : M.E = Set.univ)
     (d : MainMasks n) (w : Fin n → Option ℤ) (analyzed : Finset ℤ) (π : ArrivalOrder n) :
-    (1/2 : ℝ) * ∑ i ∈ analyzed, weightBase ^ i * (trueLambda M hE d w i : ℝ) ≤
+    (1 - 1 / weightBase) * ∑ i ∈ analyzed, weightBase ^ i * (trueLambda M hE d w i : ℝ) ≤
       ∑ e ∈ selection M hE d w π, levelWeight weightBase (w e) := by
   have hc := cumulative_option_weight_bound weightBase (by norm_num [weightBase])
     (selection M hE d w π) w analyzed
@@ -65,11 +65,18 @@ lemma weighted_trueLambda_le_selection (M : Matroid (Fin n)) (hE : M.E = Set.uni
     intro i hi
     apply mul_le_mul_of_nonneg_left _ (zpow_pos (by norm_num [weightBase]) i).le
     exact_mod_cast trueLambda_le_count M hE d w π i
-  linarith
+  have hf : (1 - 1 / weightBase) * (weightBase / (weightBase - 1)) = 1 := by
+    norm_num [weightBase]
+  have hpos : 0 ≤ 1 - 1 / weightBase := by norm_num [weightBase]
+  have h1 := mul_le_mul_of_nonneg_left (hr.trans hc) hpos
+  calc
+    _ ≤ (1 - 1 / weightBase) * (weightBase / (weightBase - 1) *
+        ∑ e ∈ selection M hE d w π, levelWeight weightBase (w e)) := h1
+    _ = _ := by rw [← mul_assoc, hf, one_mul]
 
 lemma weighted_trueLambda_le_mainWorstRounded (M : Matroid (Fin n)) (hE : M.E = Set.univ)
     (d : MainMasks n) (w : Fin n → Option ℤ) (analyzed : Finset ℤ) :
-    (1/2 : ℝ) * ∑ i ∈ analyzed, weightBase ^ i * (trueLambda M hE d w i : ℝ) ≤
+    (1 - 1 / weightBase) * ∑ i ∈ analyzed, weightBase ^ i * (trueLambda M hE d w i : ℝ) ≤
       mainWorstRounded M hE d w := by
   classical
   apply le_inf'
@@ -85,7 +92,8 @@ lemma mainMean_sum {β : Type*} (d : MainMasks n) (I : Finset β) (f : β → Ma
 
 lemma weighted_mean_trueLambda_le_mainWorstRounded (M : Matroid (Fin n)) (hE : M.E = Set.univ)
     (d : MainMasks n) (w : Fin n → Option ℤ) (analyzed : Finset ℤ) :
-    (1/2 : ℝ) * ∑ i ∈ analyzed, weightBase ^ i * mainMean d (fun d' => (trueLambda M hE d' w i : ℝ)) ≤
+    (1 - 1 / weightBase) * ∑ i ∈ analyzed, weightBase ^ i *
+      mainMean d (fun d' => (trueLambda M hE d' w i : ℝ)) ≤
       mainMean d (fun d' => mainWorstRounded M hE d' w) := by
   have hh := mainMean_mono d (fun d' _ => weighted_trueLambda_le_mainWorstRounded M hE d' w analyzed)
   simpa only [mainMean_mul, mainMean_sum] using hh

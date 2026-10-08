@@ -23,7 +23,7 @@ noncomputable def higherTrueGroups (M : Matroid (Fin n)) (d : MainMasks n)
 
 lemma trueZ_eq_listedRankStatistic (M : Matroid (Fin n)) (hE : M.E = Set.univ)
     (d : MainMasks n) (w : Fin n → Option ℤ) (i : ℤ) :
-    trueZ M hE d w i = listedRankStatistic M hE (2^100) d w i (boolParity d.odd) := by
+    trueZ M hE d w i = listedRankStatistic M hE (2^12) d w i (boolParity d.odd) := by
   unfold trueZ listedRankStatistic
   split_ifs with hi
   · unfold listedZ
@@ -33,9 +33,9 @@ lemma trueZ_eq_listedRankStatistic (M : Matroid (Fin n)) (hE : M.E = Set.univ)
 lemma mainMean_trueZ (M : Matroid (Fin n)) (hE : M.E = Set.univ)
     (d : MainMasks n) (w : Fin n → Option ℤ) (i : ℤ) :
     mainMean d (fun d' => (trueZ M hE d' w i : ℝ)) =
-      tripleMaskExpectation (fun _ => (1:ℝ)/4) (fun _ => thinningRate) (fun _ => thinningRate)
+      tripleMaskExpectation (fun _ => densityRate) (fun _ => thinningRate) (fun _ => thinningRate)
         univ (fun D C T => fairParityExpectation (fun p =>
-          (listedRankStatistic M hE (2^100) (withMasks d D C T) w i (boolParity p) : ℝ))) := by
+          (listedRankStatistic M hE (2^12) (withMasks d D C T) w i (boolParity p) : ℝ))) := by
   unfold mainMean
   apply tripleMaskExpectation_congr
   intro D hD C hC T hT
@@ -49,7 +49,7 @@ theorem mainMean_trueZ_lower (M : Matroid (Fin n)) (hE : M.E = Set.univ)
     (d : MainMasks n) (w : Fin n → Option ℤ) (i : ℤ)
     (Y : Set (Fin n)) (hY : Y ⊆ (trueGroup M d w i : Set (Fin n))) (hI : M.Indep Y)
     (hn : densityThreshold ≤ ((trueGroup M d w i).card : ℝ)) :
-    (retainedFraction * Y.ncard - ((2:ℝ)^23)⁻¹ * (trueGroup M d w i).card) / densityThreshold ≤
+    (retainedFraction * Y.ncard - transferError * (trueGroup M d w i).card) / densityThreshold ≤
       mainMean d (fun d' => (trueZ M hE d' w i : ℝ)) := by
   rw [mainMean_trueZ]
   exact listedRankStatistic_lower M hE d w i Y hY hI hn
@@ -63,23 +63,23 @@ lemma true_expected_nominal_to_final (M : Matroid (Fin n)) (hE : M.E = Set.univ)
       (trueLambda M hE {d with T := T} w i : ℝ)) +
       t * (densityThreshold * (d.C ∩ trueGroup M d w i).card +
         densityThreshold * (d.C ∩ higherTrueGroups M d w i).card +
-          (higherTrueGroups M d w i).card) := by
+          (d.D ∩ higherTrueGroups M d w i).card) := by
   by_cases hi : i ∈ groups M d w
   · have hh : (groups M d w).idxOf i < (groups M d w).length := List.idxOf_lt_length_of_mem hi
     have hl := listed_expected_nominal_to_final M hE d w _ hh t ht0 ht1
-    have hc := listed_cost_le_true_counts M d w (groups_get?_idxOf M d w i hi) (2^100)
+    have hc := listed_cost_le_true_counts M d w (groups_get?_idxOf M d w i hi) (2^12)
     rw [← trueGroup_eq_candidate_filter M d w i] at hc
-    have hc' : (((2^100) * (groupMask M d w d.C ((groups M d w).idxOf i)).ncard +
+    have hc' : (((2^12) * (groupMask M d w d.C ((groups M d w).idxOf i)).ncard +
         ∑ j ∈ range ((groups M d w).length-((groups M d w).idxOf i+1)),
-          ((2^100) * (groupMask M d w d.C ((groups M d w).idxOf i+1+j)).ncard +
+          ((2^12) * (groupMask M d w d.C ((groups M d w).idxOf i+1+j)).ncard +
             (groupMask M d w d.D ((groups M d w).idxOf i+1+j)).ncard) : ℕ) : ℝ) ≤
         densityThreshold * (d.C ∩ trueGroup M d w i).card +
           densityThreshold * (d.C ∩ higherTrueGroups M d w i).card +
-            (higherTrueGroups M d w i).card := by
+            (d.D ∩ higherTrueGroups M d w i).card := by
       calc
-        _ ≤ (((2^100) * (d.C ∩ trueGroup M d w i).card +
-          (2^100) * (d.C ∩ higherTrueGroups M d w i).card +
-          (higherTrueGroups M d w i).card : ℕ) : ℝ) := by exact_mod_cast hc
+        _ ≤ (((2^12) * (d.C ∩ trueGroup M d w i).card +
+          (2^12) * (d.C ∩ higherTrueGroups M d w i).card +
+          (d.D ∩ higherTrueGroups M d w i).card : ℕ) : ℝ) := by exact_mod_cast hc
         _ = _ := by norm_num [densityThreshold]
     have hz (T : Finset (Fin n)) : trueZ M hE {d with T := T} w i =
         listedZ M hE {d with T := T} w ((groups M d w).idxOf i) := by
@@ -134,7 +134,7 @@ theorem mainMean_nominal_to_final (M : Matroid (Fin n)) (hE : M.E = Set.univ)
       densityThreshold * mainMean d (fun d' => (trueLambda M hE d' w i : ℝ)) +
         thinningRate * (densityThreshold * thinningRate * (trueGroup M d w i).card +
           densityThreshold * thinningRate * (higherTrueGroups M d w i).card +
-            (higherTrueGroups M d w i).card) := by
+            densityRate * (higherTrueGroups M d w i).card) := by
   have hmean : mainMean d (fun d' => densityThreshold * thinningRate *
       bitsExpectation (fun _ : Fin n => thinningRate) univ (fun T =>
         (trueZ M hE {d' with T := T} w i : ℝ))) ≤
@@ -143,14 +143,15 @@ theorem mainMean_nominal_to_final (M : Matroid (Fin n)) (hE : M.E = Set.univ)
           (trueLambda M hE {d' with T := T} w i : ℝ)) +
         thinningRate * (densityThreshold * (d'.C ∩ trueGroup M d w i).card +
           densityThreshold * (d'.C ∩ higherTrueGroups M d w i).card +
-            (higherTrueGroups M d w i).card)) := by
+            (d'.D ∩ higherTrueGroups M d w i).card)) := by
     apply mainMean_mono
     intro d' hH
     have hp := true_expected_nominal_to_final M hE d' w i thinningRate
       constants_positive.2.2.1.le (by norm_num [thinningRate])
     rwa [trueGroup_eq_of_H_eq M d d' w i hH,
       higherTrueGroups_eq_of_H_eq M d d' w i hH] at hp
-  simp only [mainMean_add, mainMean_mul, mainMean_const, mainMean_guard_count] at hmean
+  simp only [mainMean_add, mainMean_mul, mainMean_const, mainMean_guard_count,
+    mainMean_density_count] at hmean
   rw [mainMean_resample_test d (fun d' => (trueZ M hE d' w i : ℝ)),
     mainMean_resample_test d (fun d' => (trueLambda M hE d' w i : ℝ))] at hmean
   simpa only [mul_assoc] using hmean
@@ -161,8 +162,8 @@ theorem true_group_payoff (M : Matroid (Fin n)) (hE : M.E = Set.univ)
     (hn : densityThreshold ≤ ((trueGroup M d w i).card : ℝ)) :
     thinningRate / densityThreshold *
         (retainedFraction * Y.ncard -
-          (((2:ℝ)^23)⁻¹ + thinningRate * densityThreshold) * (trueGroup M d w i).card -
-          (1 + thinningRate * densityThreshold) * (higherTrueGroups M d w i).card) ≤
+          (transferError + thinningRate * densityThreshold) * (trueGroup M d w i).card -
+          (thinningRate * densityThreshold + densityRate) * (higherTrueGroups M d w i).card) ≤
       mainMean d (fun d' => (trueLambda M hE d' w i : ℝ)) := by
   have hZ := mainMean_trueZ_lower M hE d w i Y hY hI hn
   have hcost := mainMean_nominal_to_final M hE d w i
@@ -170,8 +171,8 @@ theorem true_group_payoff (M : Matroid (Fin n)) (hE : M.E = Set.univ)
   have ht : 0 ≤ thinningRate := constants_positive.2.2.1.le
   have hmul := mul_le_mul_of_nonneg_left hZ (mul_nonneg hk.le ht)
   have hcancel : densityThreshold * thinningRate *
-      ((retainedFraction * Y.ncard - ((2:ℝ)^23)⁻¹ * (trueGroup M d w i).card) / densityThreshold) =
-      thinningRate * (retainedFraction * Y.ncard - ((2:ℝ)^23)⁻¹ * (trueGroup M d w i).card) := by
+      ((retainedFraction * Y.ncard - transferError * (trueGroup M d w i).card) / densityThreshold) =
+      thinningRate * (retainedFraction * Y.ncard - transferError * (trueGroup M d w i).card) := by
     field_simp
   rw [hcancel] at hmul
   have hboth := hmul.trans hcost

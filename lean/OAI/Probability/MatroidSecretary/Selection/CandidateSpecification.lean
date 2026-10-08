@@ -43,10 +43,10 @@ def CandidateMass : Prop :=
     let u := fun e => roundedWeight weightBase (w e)
     (∀ H, M.Indep (survivors M a H : Set (Fin n)) ∧
       survivors M a H ⊆ candidates M a H) ∧
-    bitsExpectation (fun _ => (1 / 2 : ℝ)) Finset.univ
-      (fun H => ∑ e ∈ survivors M a H, u e) = optimum M u / 2 ∧
-    bitsExpectation (fun _ => (1 / 2 : ℝ)) Finset.univ
-      (fun H => ∑ e ∈ candidates M a H, u e) ≤ optimum M u
+    bitsExpectation (fun _ => filterRate) Finset.univ
+      (fun H => ∑ e ∈ survivors M a H, u e) = (1 - filterRate) * optimum M u ∧
+    filterRate * bitsExpectation (fun _ => filterRate) Finset.univ
+      (fun H => ∑ e ∈ candidates M a H, u e) ≤ (1 - filterRate) * optimum M u
 
 end MatroidProphet.CandidateSpecification
 

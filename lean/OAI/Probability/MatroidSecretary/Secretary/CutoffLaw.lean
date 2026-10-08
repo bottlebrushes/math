@@ -34,9 +34,9 @@ theorem integral_initial_branch_cutoff {n : ℕ} (M : Matroid (Fin n))
     (∫ q : CouplingSeed n,
       (if mainBranch q.1 = j then f (couplingLength M hE q).val else 0)
       ∂couplingSeedLaw M hE) =
-      (1 / 2 : ℝ) * ∑ k ∈ range (n + 1),
-        (n.choose k : ℝ) * (branchRate j) ^ k *
-          (1 - branchRate j) ^ (n - k) * f k := by
+      branchWeight j * ∑ k ∈ range (n + 1),
+        (n.choose k : ℝ) * (sacrificeRate j) ^ k *
+          (1 - sacrificeRate j) ^ (n - k) * f k := by
   change (∫ q : CouplingSeed n,
     (if mainBranch q.1 = j then f (sourceMask q.1).card else 0)
     ∂couplingSeedLaw M hE) = _
@@ -45,7 +45,7 @@ theorem integral_initial_branch_cutoff {n : ℕ} (M : Matroid (Fin n))
     integral_branch_sourceMask j (fun S => f S.card)]
   congr 1
   simpa only [Finset.card_univ, Fintype.card_fin] using
-    SecretaryBinomialMixture.bitsExpectation_card (branchRate j)
+    SecretaryBinomialMixture.bitsExpectation_card (sacrificeRate j)
       (univ : Finset (Fin n)) f
 
 /-- The same actual-Q identity with the library Binomial probability measure. -/
@@ -54,9 +54,9 @@ theorem integral_initial_branch_cutoff_binomial {n : ℕ} (M : Matroid (Fin n))
     (∫ q : CouplingSeed n,
       (if mainBranch q.1 = j then f (couplingLength M hE q).val else 0)
       ∂couplingSeedLaw M hE) =
-      (1 / 2 : ℝ) * ∫ k,
+      branchWeight j * ∫ k,
         f k ∂ProbabilityTheory.binomial n
-          ⟨branchRate j, (branchRate_pos j).le, (branchRate_lt_one j).le⟩ := by
+          ⟨sacrificeRate j, (sacrificeRate_pos j).le, (sacrificeRate_lt_one j).le⟩ := by
   simp only [integral_initial_branch_cutoff, ProbabilityTheory.integral_binomial,
     smul_eq_mul, ← Nat.range_succ_eq_Iic]
 
@@ -65,8 +65,8 @@ theorem initial_branch_cutoff_atom_real {n : ℕ} (M : Matroid (Fin n))
     (hE : M.E = Set.univ) (j : Bool) (k : Fin (n + 1)) :
     (couplingSeedLaw M hE).real
       {q | mainBranch q.1 = j ∧ (couplingLength M hE q).val = k.val} =
-      (1 / 2 : ℝ) * ((n.choose k.val : ℝ) * (branchRate j) ^ k.val *
-        (1 - branchRate j) ^ (n - k.val)) := by
+      branchWeight j * ((n.choose k.val : ℝ) * (sacrificeRate j) ^ k.val *
+        (1 - sacrificeRate j) ^ (n - k.val)) := by
   classical
   rw [← integral_indicator_one (Set.to_countable _).measurableSet]
   have h := integral_initial_branch_cutoff M hE j
@@ -74,13 +74,13 @@ theorem initial_branch_cutoff_atom_real {n : ℕ} (M : Matroid (Fin n))
   have hk : k.val ∈ range (n + 1) := mem_range.mpr k.isLt
   simpa [Set.indicator_apply, Pi.one_apply, ite_and, mul_ite, hk] using h
 
-/-- The probability-measure version, retaining the branch factor one half. -/
+/-- The probability-measure version, retaining the branch probability. -/
 theorem initial_branch_cutoff_atom {n : ℕ} (M : Matroid (Fin n))
     (hE : M.E = Set.univ) (j : Bool) (k : Fin (n + 1)) :
     couplingSeedLaw M hE
       {q | mainBranch q.1 = j ∧ (couplingLength M hE q).val = k.val} =
-      ENNReal.ofReal ((1 / 2 : ℝ) * ((n.choose k.val : ℝ) *
-        (branchRate j) ^ k.val * (1 - branchRate j) ^ (n - k.val))) := by
+      ENNReal.ofReal (branchWeight j * ((n.choose k.val : ℝ) *
+        (sacrificeRate j) ^ k.val * (1 - sacrificeRate j) ^ (n - k.val))) := by
   rw [← initial_branch_cutoff_atom_real M hE j k, ofReal_measureReal]
 
 end MatroidProphet.Secretary

@@ -103,7 +103,7 @@ theorem uniform_residual_family
     ∃ family : Finset (Finset (Fin n)),
       (∀ R ∈ family, R ⊆ trueGroup M d s i) ∧
       (family.card : ℝ) ≤ Real.exp
-        (1000 * Real.log (κ : ℝ) / (κ : ℝ) * (trueGroup M d s i).card) ∧
+        (Pivots.residualExponent (κ : ℝ) * (trueGroup M d s i).card) ∧
       ∀ (A B C : Finset (Fin n)),
         A ⊆ trueGroup M d s i → B ⊆ trueGroup M d s i →
         C ⊆ trueGroup M d s i → A.Nonempty →
