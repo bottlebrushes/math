@@ -96,26 +96,26 @@ lemma focalTransferGap_expectation_le (M : Matroid (Fin n)) (hE : M.E = Set.univ
     (hn : densityThreshold ≤ ((trueGroup M d s i).card : ℝ)) (ε : Fin 2) :
     tripleMaskExpectation (fun _ => densityRate) (fun _ => thinningRate) (fun _ => thinningRate)
       (trueGroup M d s i) (fun A B C =>
-        listedTransferGap M hE (2^12) (focalMasks d (trueGroup M d s i) A B C) s i Y ε) ≤
+        listedTransferGap M hE ruleKappa (focalMasks d (trueGroup M d s i) A B C) s i Y ε) ≤
       residualError * (trueGroup M d s i).card := by
   have ht0 : 0 ≤ thinningRate := constants_positive.2.2.1.le
   have ht1 : thinningRate ≤ 1 := by norm_num [thinningRate]
-  have hu : densityRate + (1 - densityRate) * thinningRate ≤ 1/2 := maskUnion_le_half
+  have hu : densityRate + (1 - densityRate) * thinningRate ≤ maskUnionRate := le_rfl
   have hne : (trueGroup M d s i).Nonempty := by
     apply card_pos.mp
     have hp := lt_of_lt_of_le constants_positive.2.1 hn
     exact_mod_cast hp
   apply tripleMask_capped_error_le (fun _ => thinningRate) (fun _ => thinningRate)
     (fun _ => ht0) (fun _ => ht1) (fun _ => ht0) (fun _ => ht1) (fun _ => hu)
-    (trueGroup M d s i) (focalCappedFamily M hE (2^12) d s i ε)
+    (trueGroup M d s i) (focalCappedFamily M hE ruleKappa d s i ε)
   · exact labeledResidualFamilyQ_subsets M _ _ _ _ ε _
   · exact labeledResidualFamilyQ_card M hE (trueGroup M d s i) hne _ cappedThreshold
       two_le_cappedThreshold (capBudget_le _) _ _ ε _
-  · have : ((2 ^ 12 : ℕ) : ℝ) ≤ (trueGroup M d s i).card := by
+  · have : ((ruleKappa : ℕ) : ℝ) ≤ (trueGroup M d s i).card := by
       simpa only [densityThreshold, Nat.cast_pow, Nat.cast_ofNat] using hn
     exact_mod_cast this
   · intro A hA B hB C hC
-    exact listedTransferGap_focal_le M hE (2^12) (by positivity) d s i Y hY ε A B C hA hB hC
+    exact listedTransferGap_focal_le M hE ruleKappa ruleKappa_pos d s i Y hY ε A B C hA hB hC
 
 end MatroidProphet.MainAlgorithm
 

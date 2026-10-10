@@ -53,7 +53,7 @@ lemma listedTransferGap_expectation_le (M : Matroid (Fin n)) (hE : M.E = Set.uni
     (hY : Y ⊆ (trueGroup M d s i : Set (Fin n)))
     (hn : densityThreshold ≤ ((trueGroup M d s i).card : ℝ)) (ε : Fin 2) :
     tripleMaskExpectation (fun _ => densityRate) (fun _ => thinningRate) (fun _ => thinningRate)
-      univ (fun A B C => listedTransferGap M hE (2^12) (withMasks d A B C) s i Y ε) ≤
+      univ (fun A B C => listedTransferGap M hE ruleKappa (withMasks d A B C) s i Y ε) ≤
       residualError * (trueGroup M d s i).card := by
   rw [tripleMaskExpectation_split _ _ _ univ (trueGroup M d s i) (subset_univ _)]
   have ht0 : 0 ≤ thinningRate := constants_positive.2.2.1.le
@@ -78,7 +78,7 @@ lemma listedTransferGap_parity_expectation_le (M : Matroid (Fin n)) (hE : M.E = 
     (hn : densityThreshold ≤ ((trueGroup M d s i).card : ℝ)) :
     tripleMaskExpectation (fun _ => densityRate) (fun _ => thinningRate) (fun _ => thinningRate)
       univ (fun A B C => fairParityExpectation (fun p =>
-        listedTransferGap M hE (2^12) (withMasks d A B C) s i Y (boolParity p))) ≤
+        listedTransferGap M hE ruleKappa (withMasks d A B C) s i Y (boolParity p))) ≤
       residualError * (trueGroup M d s i).card := by
   have h0 := listedTransferGap_expectation_le M hE d s i Y hY hn (boolParity false)
   have h1 := listedTransferGap_expectation_le M hE d s i Y hY hn (boolParity true)

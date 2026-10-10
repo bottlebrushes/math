@@ -74,8 +74,8 @@ lemma source_weighted_group_payoff (levels analyzed : Finset ℤ) (hsub : analyz
     (transferError + thinningRate * densityThreshold / 2)
     (thinningRate * densityThreshold + densityRate) payoffError (1 - 1 / weightBase)
     (by norm_num [weightBase]) constants_positive.2.2.1.le constants_positive.2.1
-  · norm_num [transferError, thinningRate, densityThreshold]
-  · norm_num [thinningRate, densityThreshold, densityRate]
+  · norm_num [transferError, thinningRate, densityThreshold, ruleKappa]
+  · norm_num [thinningRate, densityThreshold, ruleKappa, densityRate]
   · norm_num [weightBase]
   · exact payoffError_ge
   · exact hsub
@@ -160,7 +160,7 @@ lemma main_branch_from_filter {α : Type*} [DecidableEq α] (V : Finset α)
       field_simp
     nlinarith
   have hscale : 0 ≤ (1 - 1 / weightBase) * (thinningRate / densityThreshold) := by
-    norm_num [weightBase, thinningRate, densityThreshold]
+    norm_num [weightBase, thinningRate, densityThreshold, ruleKappa]
   have hscaled := mul_le_mul_of_nonneg_left hinner hscale
   have hfinal := hscaled.trans hpaid
   have he : (1 - 1 / weightBase) * (thinningRate / densityThreshold) * ((1 - filterRate) *

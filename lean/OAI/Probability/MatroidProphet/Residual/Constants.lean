@@ -8,11 +8,11 @@ namespace OAI
 namespace MatroidProphet
 
 /-- Residual size threshold `δ`. -/
-noncomputable def residualDelta : ℝ := 1 / 50
+noncomputable def residualDelta : ℝ := 1 / 16
 
 theorem residual_error_constant :
-    densityThreshold⁻¹ + residualError ≤ transferError := by
-  norm_num [densityThreshold, residualError, transferError]
+    densityRate / (2 * densityThreshold) + residualError ≤ transferError := by
+  norm_num [densityRate, densityThreshold, ruleKappa, residualError, transferError]
 
 end MatroidProphet
 

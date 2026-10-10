@@ -32,7 +32,7 @@ theorem listedCost_le_true_counts (M : Matroid (Fin n)) (d : MainMasks n)
       (d.C ∩ trueGroup M d w i).card +
         (d.C ∩ higherTrueGroups M d w i).card +
           (higherTrueGroups M d w i).card / densityThreshold := by
-  have hc0 := listed_cost_le_true_counts M d w hi (2^12)
+  have hc0 := listed_cost_le_true_counts M d w hi ruleKappa
   have hc := hc0.trans (Nat.add_le_add_left (Finset.card_le_card Finset.inter_subset_right) _)
   rw [← trueGroup_eq_candidate_filter M d w i] at hc
   have hr : densityThreshold * (groupMask M d w d.C h).ncard +

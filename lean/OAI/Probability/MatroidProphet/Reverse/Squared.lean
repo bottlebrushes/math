@@ -107,20 +107,20 @@ theorem reverse_squared_exit_mass (M : Matroid α) (hE : M.E = Set.univ)
   set m := pathHorizon h + 1
   set S0 : ℕ → Set α := fun _ => Set.univ
   have closed := reverseClosed_univ M hE κ D (-1)
-  let η : ℝ := ((2:ℝ)^12)⁻¹
+  let η : ℝ := ((2:ℝ)^14)⁻¹
   let A : ℕ → ℤ → (ℕ → Set α) → (ℕ → Set α) → ℝ := fun i =>
     aliveThresholdCost M hE κ D G q d h (exitThresholdAt i)
   have hpoint (k : ℤ) (S S' : ℕ → Set α) :
-      (1/2 : ℝ) * exitHazardCost M hE κ D G q d h k S S' ≤
+      (11/20 : ℝ) * exitHazardCost M hE κ D G q d h k S S' ≤
         squareHazardCost M hE κ D G q d h k S S' +
-          ∑ i ∈ range 11, exitWeight i * A i k S S' +
-            (1/2 : ℝ) * lowHazardCost M hE κ D G q d h η k S S' := by
+          ∑ i ∈ range 58, exitWeight i * A i k S S' +
+            (11/20 : ℝ) * lowHazardCost M hE κ D G q d h η k S S' := by
     by_cases hs : d ∈ S h
     · set x := reverseHazard M hE κ D G q d h k S with hx
       have hx0 : 0 ≤ x := reverseHazard_nonneg M hE κ D G q hq0 hq1 d h k S
       have hx1 : x ≤ 1 := reverseHazard_le_one M hE κ D G q hq0 hq1 d h k S
       have key := exit_pointwise x hx0 hx1
-      have hA : ∑ i ∈ range 11, exitWeight i * A i k S S' =
+      have hA : ∑ i ∈ range 58, exitWeight i * A i k S S' =
           (1 - x) * exitCertificate x := by
         unfold exitCertificate
         rw [mul_sum]
@@ -129,17 +129,17 @@ theorem reverse_squared_exit_mass (M : Matroid α) (hE : M.E = Set.univ)
         simp only [A, aliveThresholdCost, hs, true_and, ← hx]
         split_ifs <;> ring
       have hL : lowHazardCost M hE κ D G q d h η k S S' =
-          (if x < ((2 : ℝ) ^ 12)⁻¹ then x else 0) := by
+          (if x < ((2 : ℝ) ^ 14)⁻¹ then x else 0) := by
         simp only [lowHazardCost, hs, true_and, ← hx, η]
       simp only [exitHazardCost, squareHazardCost, hs, ite_true, ← hx]
       rw [hA, hL]
       linarith
     · simp [exitHazardCost, squareHazardCost, lowHazardCost, A, aliveThresholdCost, hs]
   have hmean :
-      (1/2 : ℝ) * reverseMeanCost M hE κ D G n q (exitHazardCost M hE κ D G q d h) m (-1) S0 ≤
+      (11/20 : ℝ) * reverseMeanCost M hE κ D G n q (exitHazardCost M hE κ D G q d h) m (-1) S0 ≤
         reverseMeanCost M hE κ D G n q (squareHazardCost M hE κ D G q d h) m (-1) S0 +
-          ∑ i ∈ range 11, exitWeight i * reverseMeanCost M hE κ D G n q (A i) m (-1) S0 +
-            (1/2 : ℝ) * reverseMeanCost M hE κ D G n q
+          ∑ i ∈ range 58, exitWeight i * reverseMeanCost M hE κ D G n q (A i) m (-1) S0 +
+            (11/20 : ℝ) * reverseMeanCost M hE κ D G n q
               (lowHazardCost M hE κ D G q d h η) m (-1) S0 := by
     rw [← reverseMeanCost_mul, ← reverseMeanCost_mul]
     simp_rw [← reverseMeanCost_mul]
@@ -150,28 +150,48 @@ theorem reverse_squared_exit_mass (M : Matroid α) (hE : M.E = Set.univ)
     exact reverseCost_mono M hE κ D G n _ _ hpoint _ _ _ C
   rw [exitHazardCost_mean_eq_exit M hE κ D G n hG q hq0 hq1 d h hh _ _ _ closed,
     reverse_exit_total_one M hE κ D G n hG q d hd h hh, mul_one] at hmean
-  have hA (i : ℕ) (hi : i ∈ range 11) :
+  have hA (i : ℕ) (hi : i ∈ range 58) :
       exitWeight i * reverseMeanCost M hE κ D G n q (A i) m (-1) S0 ≤
-        exitWeight i * (((i : ℝ) + 2) * Real.log 2) := by
+        exitWeight i * ((2 + (i : ℝ) / 4) * Real.log 2) := by
     apply mul_le_mul_of_nonneg_left _ (exitWeight_nonneg i (mem_range.mp hi))
     have hp : 0 < exitThresholdAt i := by unfold exitThresholdAt; positivity
     have hp1 : exitThresholdAt i ≤ 1 := by
+      have hpw : (16 / 19 : ℝ) ^ i ≤ 1 := by
+        exact pow_le_one₀ (by norm_num) (by norm_num)
       unfold exitThresholdAt
-      exact inv_le_one_of_one_le₀ (one_le_pow₀ (by norm_num))
+      nlinarith
     have hb := aliveThresholdCost_mean_le M hE κ D G n hG q hq0 hq1 d h hh _ hp hp1 m (-1) S0 closed
-    have hlog : Real.log (1 / exitThresholdAt i) = ((i : ℝ) + 2) * Real.log 2 := by
-      unfold exitThresholdAt
-      rw [one_div, inv_inv, Real.log_pow]
+    have hlog : Real.log (1 / exitThresholdAt i) ≤
+        ((2 : ℝ) + (i : ℝ) / 4) * Real.log 2 := by
+      have h19 : Real.log (19 : ℝ) ≤ (17 / 4 : ℝ) * Real.log 2 := by
+        have hh := Real.log_le_log (by positivity : (0 : ℝ) < 19 ^ 4)
+          (by norm_num : (19 : ℝ)^4 ≤ 2^17)
+        rw [Real.log_pow, Real.log_pow] at hh
+        norm_num at hh ⊢
+        nlinarith
+      rw [show 1 / exitThresholdAt i = 4 * (19 / 16 : ℝ)^i by
+        unfold exitThresholdAt
+        rw [one_div, mul_inv_rev, ← inv_pow]
+        norm_num
+        ring]
+      rw [Real.log_mul (by norm_num) (by positivity), Real.log_pow,
+        Real.log_div (by norm_num) (by norm_num)]
+      have h4 : Real.log (4 : ℝ) = 2 * Real.log 2 := by
+        rw [show (4 : ℝ) = 2 ^ 2 by norm_num, Real.log_pow]
+        norm_num
+      have h16 : Real.log (16 : ℝ) = 4 * Real.log 2 := by
+        rw [show (16 : ℝ) = 2 ^ 4 by norm_num, Real.log_pow]
+        norm_num
+      rw [h4, h16]
       push_cast
-      ring
-    rw [hlog] at hb
-    exact hb
+      nlinarith
+    exact hb.trans hlog
   have hsum := sum_le_sum hA
-  have hlow := reverse_low_hazard_le_potential M hE κ D G n hG q hq0 hq1 d h hh m (-1) S0 closed
+  have hlow := reverse_low_hazard_le_potential M hE κ D G n hG q hq0 hq1 d h hh 14 m (-1) S0 closed
   have hval := exit_dual_value
-  have hlow' : (1/2 : ℝ) * reverseMeanCost M hE κ D G n q
-      (lowHazardCost M hE κ D G q d h η) m (-1) S0 ≤ 1/2 * hazardTailPotential 12 := by
-    apply mul_le_mul_of_nonneg_left hlow (by norm_num)
+  have hlow' : (11/20 : ℝ) * reverseMeanCost M hE κ D G n q
+      (lowHazardCost M hE κ D G q d h η) m (-1) S0 ≤ 11/20 * hazardTailPotential 14 := by
+    simpa [η] using mul_le_mul_of_nonneg_left hlow (by norm_num : (0 : ℝ) ≤ 11/20)
   linarith
 
 end MatroidProphet

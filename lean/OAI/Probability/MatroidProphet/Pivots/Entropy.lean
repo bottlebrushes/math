@@ -1,7 +1,8 @@
+import OAI.Probability.MatroidProphet.Constants
 import Mathlib.Data.Nat.Choose.Sum
 import Mathlib.Analysis.SpecialFunctions.Log.Basic
-import Mathlib.Analysis.SpecialFunctions.Exp
 
+import Mathlib.Analysis.SpecialFunctions.Exp
 namespace OAI
 
 namespace MatroidProphet.Pivots
@@ -108,15 +109,23 @@ theorem residual_sharp_product_le_exp (n q : ℕ) (κ : ℝ) (hκ : 2 ≤ κ)
           rw [hrw]
           nlinarith
 
-/-- The sharpened residual exponent at `κ = 2^12`. -/
+/-- The sharpened residual exponent at `κ = ruleKappa`. -/
 theorem residualExponent_charge :
-    residualExponent (2 ^ 12) = (5 + 64 * Real.log 2) / 4096 := by
+    residualExponent ruleKappa =
+      (5 + 5 * Real.log 3 + 49 * Real.log 2) / 1536 := by
   unfold residualExponent
-  have h1 : Real.log ((2 : ℝ) ^ 12) = 12 * Real.log 2 := by rw [Real.log_pow]; norm_num
-  have h2 : Real.log ((2 : ℝ) ^ 12 / 2) = 11 * Real.log 2 := by
-    rw [show ((2 : ℝ) ^ 12 / 2) = 2 ^ 11 by norm_num, Real.log_pow]; norm_num
+  have hκ : (1536 : ℝ) = 3 * 2 ^ 9 := by norm_num
+  have hκ2 : (768 : ℝ) = 3 * 2 ^ 8 := by norm_num
+  have h1 : Real.log (1536 : ℝ) = Real.log 3 + 9 * Real.log 2 := by
+    rw [hκ, Real.log_mul (by norm_num) (by positivity), Real.log_pow]
+    norm_num
+  have h2 : Real.log (768 : ℝ) = Real.log 3 + 8 * Real.log 2 := by
+    rw [hκ2, Real.log_mul (by norm_num) (by positivity), Real.log_pow]
+    norm_num
   have h3 : Real.log (4 : ℝ) = 2 * Real.log 2 := by
-    rw [show (4 : ℝ) = 2 ^ 2 by norm_num, Real.log_pow]; norm_num
+    rw [show (4 : ℝ) = 2 ^ 2 by norm_num, Real.log_pow]
+    norm_num
+  norm_num [ruleKappa]
   rw [h1, h2, h3]
   norm_num
   ring

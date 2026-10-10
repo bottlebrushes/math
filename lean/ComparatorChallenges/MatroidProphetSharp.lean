@@ -3,7 +3,7 @@ import Mathlib
 namespace OAI
 
 /-!
-# One-sample matroid selection with ratio `2⁻⁴⁰`
+# One-sample matroid selection with ratio `2⁻³⁸`
 
 The rule and its finite seed law depend only on the known labeled matroid.
 A decision sees the initial sample vector, the entire seed, and the arriving
@@ -83,7 +83,7 @@ def OneSampleChallengeSharp.{u} : Prop :=
         Integrable (fun ω => optimum M (V ω)) μ →
         ∀ (π : Ω → ArrivalOrder n), Measurable π →
           Integrable (fun ω => reward A (R ω) (S ω) (V ω) (π ω)) μ ∧
-          ((2 : ℝ) ^ 40)⁻¹ * (∫ ω, optimum M (V ω) ∂μ) ≤
+          ((2 : ℝ) ^ 38)⁻¹ * (∫ ω, optimum M (V ω) ∂μ) ≤
             ∫ ω, reward A (R ω) (S ω) (V ω) (π ω) ∂μ
 
 theorem one_sample_sharp.{u} : OneSampleChallengeSharp.{u} := by

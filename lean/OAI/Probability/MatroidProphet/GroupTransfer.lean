@@ -24,24 +24,24 @@ theorem listedRankStatistic_lower (M : Matroid (Fin n)) (hE : M.E = Set.univ)
     (retainedFraction * Y.ncard - transferError * (trueGroup M d s i).card) / densityThreshold ≤
       tripleMaskExpectation (fun _ => densityRate) (fun _ => thinningRate) (fun _ => thinningRate)
         univ (fun D C T => fairParityExpectation (fun p =>
-          (listedRankStatistic M hE (2^12) (withMasks d D C T) s i (boolParity p) : ℝ))) := by
+          (listedRankStatistic M hE ruleKappa (withMasks d D C T) s i (boolParity p) : ℝ))) := by
   have ht0 : 0 ≤ thinningRate := constants_positive.2.2.1.le
   have ht1 : thinningRate ≤ 1 := by norm_num [thinningRate]
-  have hsafe := listedSafeStatistic_lower M hE (2^12) (by positivity) d s i Y hY hI
+  have hsafe := listedSafeStatistic_lower M hE ruleKappa ruleKappa_pos d s i Y hY hI
     (fun _ => thinningRate) (fun _ => ht0) (fun _ => ht1)
   have herr := listedTransferGap_parity_expectation_le M hE d s i Y hY hn
-  have hkcast : ((2^12 : ℕ) : ℝ) = densityThreshold := by
+  have hkcast : ((ruleKappa : ℕ) : ℝ) = densityThreshold := by
     simp only [Nat.cast_pow, Nat.cast_ofNat, densityThreshold]
   rw [hkcast] at hsafe
   have hdet (D C T : Finset (Fin n)) :
-      fairParityExpectation (fun p => (listedSafeStatistic M hE (2^12)
+      fairParityExpectation (fun p => (listedSafeStatistic M hE ruleKappa
         (withMasks d D C T) s i Y (boolParity p) : ℝ)) ≤
-      densityThreshold * fairParityExpectation (fun p => (listedRankStatistic M hE (2^12)
+      densityThreshold * fairParityExpectation (fun p => (listedRankStatistic M hE ruleKappa
         (withMasks d D C T) s i (boolParity p) : ℝ)) +
-      fairParityExpectation (fun p => listedTransferGap M hE (2^12)
+      fairParityExpectation (fun p => listedTransferGap M hE ruleKappa
         (withMasks d D C T) s i Y (boolParity p)) := by
-    have h0 := listedSafe_le_rank_gap M hE (2^12) (withMasks d D C T) s i Y (boolParity false)
-    have h1 := listedSafe_le_rank_gap M hE (2^12) (withMasks d D C T) s i Y (boolParity true)
+    have h0 := listedSafe_le_rank_gap M hE ruleKappa (withMasks d D C T) s i Y (boolParity false)
+    have h1 := listedSafe_le_rank_gap M hE ruleKappa (withMasks d D C T) s i Y (boolParity true)
     rw [hkcast] at h0 h1
     dsimp only [fairParityExpectation]
     calc
@@ -59,14 +59,17 @@ theorem listedRankStatistic_lower (M : Matroid (Fin n)) (hE : M.E = Set.univ)
   rw [div_eq_mul_inv] at hsafe
   set Ez := tripleMaskExpectation (fun _ => densityRate) (fun _ => thinningRate) (fun _ => thinningRate)
     univ (fun D C T => fairParityExpectation (fun p =>
-      (listedRankStatistic M hE (2^12) (withMasks d D C T) s i (boolParity p) : ℝ)))
+      (listedRankStatistic M hE ruleKappa (withMasks d D C T) s i (boolParity p) : ℝ)))
   set Eg := tripleMaskExpectation (fun _ => densityRate) (fun _ => thinningRate) (fun _ => thinningRate)
     univ (fun D C T => fairParityExpectation (fun p =>
-      listedTransferGap M hE (2^12) (withMasks d D C T) s i Y (boolParity p)))
-  have h1 : retainedFraction * Y.ncard - (trueGroup M d s i).card * densityThreshold⁻¹ ≤
+      listedTransferGap M hE ruleKappa (withMasks d D C T) s i Y (boolParity p)))
+  have h1 : retainedFraction * Y.ncard -
+      densityRate * (trueGroup M d s i).card * (2 * densityThreshold)⁻¹ ≤
       densityThreshold * Ez + Eg := hsafe.trans hmean
   have h2 : Eg ≤ residualError * (trueGroup M d s i).card := herr
   have h3 := hc
+  have h4 : densityRate * (trueGroup M d s i).card * (2 * densityThreshold)⁻¹ =
+      densityRate / (2 * densityThreshold) * (trueGroup M d s i).card := by ring
   nlinarith
 
 end MatroidProphet.MainAlgorithm

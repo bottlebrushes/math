@@ -17,16 +17,16 @@ theorem residualBad_tail_exact (q : α → ℝ)
     (hq0 : ∀ e, 0 ≤ q e) (hqhalf : ∀ e, q e ≤ 1 / 2)
     (V : Finset α) (F : Finset (Finset α)) (hF : ∀ R ∈ F, R ⊆ V)
     (hcard : (F.card : ℝ) ≤ Real.exp
-      (Pivots.residualExponent (2 ^ 12) * V.card))
+      (Pivots.residualExponent ruleKappa * V.card))
     (hn : densityThreshold ≤ (V.card : ℝ)) :
     bitsExpectation q V (residualBadIndicator F (residualDelta * V.card)) ≤ residualTail := by
   calc
     _ ≤ (F.card : ℝ) * Real.exp (-(residualDelta * V.card) * Real.log 2) :=
       bitsExpectation_residualBad_le q hq0 hqhalf V F hF _
-    _ ≤ Real.exp (Pivots.residualExponent (2 ^ 12) * V.card) *
+    _ ≤ Real.exp (Pivots.residualExponent ruleKappa * V.card) *
         Real.exp (-(residualDelta * V.card) * Real.log 2) :=
       mul_le_mul_of_nonneg_right hcard (Real.exp_nonneg _)
-    _ = Real.exp ((Pivots.residualExponent (2 ^ 12) -
+    _ = Real.exp ((Pivots.residualExponent ruleKappa -
         residualDelta * Real.log 2) * V.card) := by
       rw [← Real.exp_add]
       congr 1
@@ -42,19 +42,19 @@ theorem focalResidualBad_tail_exact {n : ℕ} (M : Matroid (Fin n))
     (hn : densityThreshold ≤ ((trueGroup M d s i).card : ℝ)) :
     tripleMaskExpectation (fun _ => densityRate) (fun _ => thinningRate)
       (fun _ => thinningRate) (trueGroup M d s i)
-      (fun A B _C => residualBadIndicator (focalResidualFamily M hE (2^12) d s i ε)
+      (fun A B _C => residualBadIndicator (focalResidualFamily M hE ruleKappa d s i ε)
         (residualDelta * (trueGroup M d s i).card) (A ∪ B)) ≤ residualTail := by
   have hne : (trueGroup M d s i).Nonempty := by
     apply card_pos.mp
     exact_mod_cast lt_of_lt_of_le constants_positive.2.1 hn
-  have hcard : ((focalResidualFamily M hE (2^12) d s i ε).card : ℝ) ≤
-      Real.exp (Pivots.residualExponent (2 ^ 12) * (trueGroup M d s i).card) := by
-    have hc := labeledResidualFamily_card M hE (trueGroup M d s i) hne (2^12)
-      (by norm_num) (guardedPath M hE (2^12)
+  have hcard : ((focalResidualFamily M hE ruleKappa d s i ε).card : ℝ) ≤
+      Real.exp (Pivots.residualExponent ruleKappa * (trueGroup M d s i).card) := by
+    have hc := labeledResidualFamily_card M hE (trueGroup M d s i) hne ruleKappa
+      two_le_ruleKappa (guardedPath M hE ruleKappa
         (groupMask M (focalReference M d s i) s (focalReference M d s i).D)
         (groupMask M (focalReference M d s i) s (focalReference M d s i).C)
         (focalIndex M d s i)) (activation (focalIndex M d s i)) ε
-      (fun b => lowerCompetition M hE (2^12)
+      (fun b => lowerCompetition M hE ruleKappa
         (groupMask M (focalReference M d s i) s (focalReference M d s i).D)
         (groupMask M (focalReference M d s i) s (focalReference M d s i).C)
         (groupMask M (focalReference M d s i) s (focalReference M d s i).T)

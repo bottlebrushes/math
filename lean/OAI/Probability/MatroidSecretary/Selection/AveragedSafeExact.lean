@@ -98,20 +98,20 @@ theorem averaged_safe_sampled_labels
       tripleMaskExpectation (fun _ => densityRate)
         (fun _ => thinningRate) (fun _ => thinningRate) univ (fun D C T =>
           fairParityExpectation (fun p =>
-            (listedSafeStatistic M hE (2^12) (withMasks d D C T) s i Y
+            (listedSafeStatistic M hE ruleKappa (withMasks d D C T) s i Y
               (boolParity p) : ℝ))) := by
-  have hs := listedSafeStatistic_averaged_exact M hE (2^12) (by positivity)
+  have hs := listedSafeStatistic_averaged_exact M hE ruleKappa ruleKappa_pos
     d s i (Y ∩ (trueGroup M d s i : Set (Fin n))) Set.inter_subset_right
     (hI.subset Set.inter_subset_left) (fun _ => thinningRate)
     (fun _ => constants_positive.2.2.1.le)
     (fun _ => by norm_num [thinningRate])
   have heq (D C T : Finset (Fin n)) (p : Bool) :
-      listedSafeStatistic M hE (2^12) (withMasks d D C T) s i
+      listedSafeStatistic M hE ruleKappa (withMasks d D C T) s i
         (Y ∩ (trueGroup M d s i : Set (Fin n))) (boolParity p) =
-      listedSafeStatistic M hE (2^12) (withMasks d D C T) s i Y
+      listedSafeStatistic M hE ruleKappa (withMasks d D C T) s i Y
         (boolParity p) := by
     simpa only [trueGroup_withMasks] using
-      listedSafeStatistic_inter_trueGroup M hE (2^12)
+      listedSafeStatistic_inter_trueGroup M hE ruleKappa
         (withMasks d D C T) s i Y (boolParity p)
   simpa only [Nat.cast_pow, Nat.cast_ofNat, densityThreshold, heq] using hs
 

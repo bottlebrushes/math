@@ -98,7 +98,7 @@ theorem safeLayerStatistic_lower (M : Matroid α) (hE : M.E = Set.univ)
     (hG : Pairwise (fun i j => Disjoint (G i) (G j))) (q : α → ℝ)
     (hq0 : ∀ e, 0 ≤ q e) (hq1 : ∀ e, q e ≤ 1)
     (h : ℕ) (U I : Set α) (hIU : I ⊆ U) (hI : M.Indep I) :
-    exitMass / 2 * I.ncard - (D h).ncard / (κ:ℝ) ≤
+    exitMass / 2 * I.ncard - (D h).ncard / (2 * (κ:ℝ)) ≤
       bitsExpectation q univ (fun C => bitsExpectation q univ (fun T =>
         fairParityExpectation (fun parity => (safeLayerStatistic M hE κ D
           (fun i => (C : Set α) ∩ (G i : Set α)) (fun i => (T : Set α) ∩ (G i : Set α))

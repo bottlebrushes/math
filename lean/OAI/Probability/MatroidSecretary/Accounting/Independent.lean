@@ -114,7 +114,7 @@ theorem all_orders {n : ℕ} (M : Matroid (Fin n)) (hE : M.E = Set.univ)
       ((selection M hE d w π).filter (fun e =>
         ∃ i, w e = some i ∧ h ≤ (groups M d w).idxOf i)).card) ∧
     (∀ A : Finset (Fin n), Disjoint A (pathGroups M d w h) →
-      thinningRate * (finalRankStatistic M hE (2^12)
+      thinningRate * (finalRankStatistic M hE ruleKappa
         (groupMask M d w d.D) (groupMask M d w d.C)
         (fun j => (A : Set (Fin n)) ∩ (pathGroups M d w j : Set (Fin n)))
         h (groups M d w).length (pathGroups M d w h)
@@ -126,7 +126,7 @@ theorem all_orders {n : ℕ} (M : Matroid (Fin n)) (hE : M.E = Set.univ)
   · intro π
     exact listedLambda_le_count M hE d w π h
   · intro A hA
-    have ht := thinning_finalRankStatistic_conditioned M hE (2^12)
+    have ht := thinning_finalRankStatistic_conditioned M hE ruleKappa
       (groupMask M d w d.D) (groupMask M d w d.C) (pathGroups M d w)
       (pathGroups_disjoint M d w) h (groups M d w).length
       ((d.H ∪ d.D ∪ d.C : Finset (Fin n)) : Set (Fin n)) (boolParity d.odd)
@@ -144,12 +144,12 @@ theorem listed_rank_cost {n : ℕ} (M : Matroid (Fin n)) (hE : M.E = Set.univ)
         ∑ j ∈ Finset.range ((groups M d w).length - (h+1)),
           ((groupMask M d w d.C (h+1+j)).ncard +
             (groupMask M d w d.D (h+1+j)).ncard / densityThreshold)) ≤
-    (finalRankStatistic M hE (2^12)
+    (finalRankStatistic M hE ruleKappa
       (groupMask M d w d.D) (groupMask M d w d.C) (groupMask M d w d.T)
       h (groups M d w).length (groupMask M d w Finset.univ h)
       ((d.H ∪ d.D ∪ d.C : Finset (Fin n)) : Set (Fin n)) Set.univ
       (boolParity d.odd) : ℝ) := by
-  have hc := rank_cost_real M hE (2^12) (by positivity)
+  have hc := rank_cost_real M hE ruleKappa ruleKappa_pos
     (groupMask M d w d.D) (groupMask M d w d.C) (groupMask M d w d.T)
     h ((groups M d w).length - (h+1)) (groupMask M d w Finset.univ h)
     ((d.H ∪ d.D ∪ d.C : Finset (Fin n)) : Set (Fin n)) (boolParity d.odd)

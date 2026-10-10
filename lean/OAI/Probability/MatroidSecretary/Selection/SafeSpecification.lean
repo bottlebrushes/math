@@ -18,7 +18,7 @@ def SafeSampleClaim : Prop :=
       bitsExpectation (fun _ => thinningRate) Finset.univ (fun C =>
         bitsExpectation (fun _ => thinningRate) Finset.univ (fun T =>
           fairParityExpectation (fun p =>
-            (listedSafeStatistic M hE (2^12) (withMasks d d.D C T) s i Y
+            (listedSafeStatistic M hE ruleKappa (withMasks d d.D C T) s i Y
               (boolParity p) : ℝ))))
 
 end MatroidProphet

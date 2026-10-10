@@ -23,7 +23,7 @@ noncomputable def higherTrueGroups (M : Matroid (Fin n)) (d : MainMasks n)
 
 lemma trueZ_eq_listedRankStatistic (M : Matroid (Fin n)) (hE : M.E = Set.univ)
     (d : MainMasks n) (w : Fin n → Option ℤ) (i : ℤ) :
-    trueZ M hE d w i = listedRankStatistic M hE (2^12) d w i (boolParity d.odd) := by
+    trueZ M hE d w i = listedRankStatistic M hE ruleKappa d w i (boolParity d.odd) := by
   unfold trueZ listedRankStatistic
   split_ifs with hi
   · unfold listedZ
@@ -35,7 +35,7 @@ lemma mainMean_trueZ (M : Matroid (Fin n)) (hE : M.E = Set.univ)
     mainMean d (fun d' => (trueZ M hE d' w i : ℝ)) =
       tripleMaskExpectation (fun _ => densityRate) (fun _ => thinningRate) (fun _ => thinningRate)
         univ (fun D C T => fairParityExpectation (fun p =>
-          (listedRankStatistic M hE (2^12) (withMasks d D C T) w i (boolParity p) : ℝ))) := by
+          (listedRankStatistic M hE ruleKappa (withMasks d D C T) w i (boolParity p) : ℝ))) := by
   unfold mainMean
   apply tripleMaskExpectation_congr
   intro D hD C hC T hT
@@ -59,7 +59,7 @@ noncomputable def trueOwn (M : Matroid (Fin n)) (hE : M.E = Set.univ)
     (d : MainMasks n) (w : Fin n → Option ℤ) (i : ℤ) : ℕ := by
   classical
   exact if i ∈ groups M d w then
-    ownGuardCost M hE (2^12) (groupMask M d w d.D) (groupMask M d w d.C)
+    ownGuardCost M hE ruleKappa (groupMask M d w d.D) (groupMask M d w d.C)
       ((groups M d w).idxOf i) (boolParity d.odd) else 0
 
 /-- Averaged over the parity, at most half of the group's guards enter layer bases. -/
@@ -71,15 +71,15 @@ lemma trueOwn_parity (M : Matroid (Fin n)) (hE : M.E = Set.univ)
   have hsum : trueOwn M hE {d with odd := false} w i + trueOwn M hE {d with odd := true} w i ≤
       (d.C ∩ trueGroup M d w i).card := by
     by_cases hi : i ∈ groups M d w
-    · have hb := ownGuardCost_both M hE (2^12) (groupMask M d w d.D) (groupMask M d w d.C)
+    · have hb := ownGuardCost_both M hE ruleKappa (groupMask M d w d.D) (groupMask M d w d.C)
         ((groups M d w).idxOf i)
       have hc : (groupMask M d w d.C ((groups M d w).idxOf i)).ncard =
           (d.C ∩ trueGroup M d w i).card := by
         rw [groupMask_at_key M d w d.C _ i (groups_get?_idxOf M d w i hi), Set.ncard_coe_finset]
-      have h0 : trueOwn M hE {d with odd := false} w i = ownGuardCost M hE (2^12)
+      have h0 : trueOwn M hE {d with odd := false} w i = ownGuardCost M hE ruleKappa
           (groupMask M d w d.D) (groupMask M d w d.C) ((groups M d w).idxOf i) 0 := by
         unfold trueOwn; exact ite_eq_left hi
-      have h1 : trueOwn M hE {d with odd := true} w i = ownGuardCost M hE (2^12)
+      have h1 : trueOwn M hE {d with odd := true} w i = ownGuardCost M hE ruleKappa
           (groupMask M d w d.D) (groupMask M d w d.C) ((groups M d w).idxOf i) 1 := by
         unfold trueOwn; exact ite_eq_left hi
       rw [h0, h1]; omega
@@ -106,23 +106,23 @@ lemma true_expected_nominal_to_final (M : Matroid (Fin n)) (hE : M.E = Set.univ)
   by_cases hi : i ∈ groups M d w
   · have hh : (groups M d w).idxOf i < (groups M d w).length := List.idxOf_lt_length_of_mem hi
     have hl := listed_expected_nominal_to_final M hE d w _ hh t ht0 ht1
-    have hc := listed_later_cost_le_true_counts M d w (groups_get?_idxOf M d w i hi) (2^12)
-    have hc' : (((2^12) * ownGuardCost M hE (2^12) (groupMask M d w d.D) (groupMask M d w d.C)
+    have hc := listed_later_cost_le_true_counts M d w (groups_get?_idxOf M d w i hi) ruleKappa
+    have hc' : ((ruleKappa * ownGuardCost M hE ruleKappa (groupMask M d w d.D) (groupMask M d w d.C)
           ((groups M d w).idxOf i) (boolParity d.odd) +
         ∑ j ∈ range ((groups M d w).length-((groups M d w).idxOf i+1)),
-          ((2^12) * (groupMask M d w d.C ((groups M d w).idxOf i+1+j)).ncard +
+          (ruleKappa * (groupMask M d w d.C ((groups M d w).idxOf i+1+j)).ncard +
             (groupMask M d w d.D ((groups M d w).idxOf i+1+j)).ncard) : ℕ) : ℝ) ≤
         densityThreshold * trueOwn M hE d w i +
           densityThreshold * (d.C ∩ higherTrueGroups M d w i).card +
             (d.D ∩ higherTrueGroups M d w i).card := by
-      have hown : trueOwn M hE d w i = ownGuardCost M hE (2^12) (groupMask M d w d.D)
+      have hown : trueOwn M hE d w i = ownGuardCost M hE ruleKappa (groupMask M d w d.D)
           (groupMask M d w d.C) ((groups M d w).idxOf i) (boolParity d.odd) := by
         unfold trueOwn; rw [ite_eq_left hi]
       rw [hown]
       have hcR : ((∑ j ∈ range ((groups M d w).length-((groups M d w).idxOf i+1)),
-          ((2^12) * (groupMask M d w d.C ((groups M d w).idxOf i+1+j)).ncard +
+          (ruleKappa * (groupMask M d w d.C ((groups M d w).idxOf i+1+j)).ncard +
             (groupMask M d w d.D ((groups M d w).idxOf i+1+j)).ncard) : ℕ) : ℝ) ≤
-          (((2^12) * (d.C ∩ higherTrueGroups M d w i).card +
+          ((ruleKappa * (d.C ∩ higherTrueGroups M d w i).card +
             (d.D ∩ higherTrueGroups M d w i).card : ℕ) : ℝ) := by
         exact_mod_cast hc
       push_cast at hcR ⊢

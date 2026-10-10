@@ -17,9 +17,9 @@ lemma groupMask_not_mem_filter (M : Matroid (Fin n)) (d : MainMasks n)
 lemma nominalLayer_sacrifice_eq_source (M : Matroid (Fin n)) (hE : M.E = Set.univ)
     (d : MainMasks n) (w : Fin n → Option ℤ) (h : ℕ) (ε : Fin 2)
     (b : Pivots.ParityWindow (activation h) ε) :
-    nominalLayerSet M hE (2^12) (groupMask M d w d.D) (groupMask M d w d.C)
+    nominalLayerSet M hE ruleKappa (groupMask M d w d.D) (groupMask M d w d.C)
       h (groupMask M d w univ h) ε b \ ((d.H ∪ d.D ∪ d.C : Finset (Fin n)) : Set (Fin n)) =
-    nominalLayerSet M hE (2^12) (groupMask M d w d.D) (groupMask M d w d.C)
+    nominalLayerSet M hE ruleKappa (groupMask M d w d.D) (groupMask M d w d.C)
       h (groupMask M d w univ h) ε b \ ((d.D ∪ d.C : Finset (Fin n)) : Set (Fin n)) := by
   ext e
   constructor
@@ -30,7 +30,7 @@ lemma nominalLayer_sacrifice_eq_source (M : Matroid (Fin n)) (hE : M.E = Set.uni
       simp only [Finset.mem_coe, Finset.mem_union] at heO ⊢
       tauto)
   · rintro ⟨he, hnot⟩
-    have heG := nominalLayerSet_subset M hE (2^12)
+    have heG := nominalLayerSet_subset M hE ruleKappa
       (groupMask M d w d.D) (groupMask M d w d.C) h (groupMask M d w univ h) ε b he
     have heH := groupMask_not_mem_filter M d w univ h heG
     refine ⟨he, ?_⟩

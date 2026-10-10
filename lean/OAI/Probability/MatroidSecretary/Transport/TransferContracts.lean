@@ -89,7 +89,7 @@ theorem sample_to_rank_contract (M : Matroid (Fin n)) (hE : M.E = Set.univ)
       tripleMaskExpectation (fun _ => densityRate)
         (fun _ => thinningRate) (fun _ => thinningRate) Finset.univ
         (fun D C T => fairParityExpectation (fun p =>
-          (listedRankStatistic M hE (2^12) (withMasks d D C T) a i
+          (listedRankStatistic M hE ruleKappa (withMasks d D C T) a i
             (boolParity p) : ℝ))) := by
   classical
   let a := fun e => roundedLevel weightBase (w e)

@@ -10,34 +10,44 @@ noncomputable section
 
 /-- Geometric level ratio `B`. -/
 def weightBase : ℝ := 2 ^ 8
-/-- Density rank charge `κ`; the rule uses the natural number `2^12`. -/
-def densityThreshold : ℝ := 2 ^ 12
+def ruleKappa : ℕ := 1536
+/-- Density rank charge `κ`; the rule uses `ruleKappa`. -/
+def densityThreshold : ℝ := (ruleKappa : ℝ)
 /-- Guard and test mask rate `t`. -/
-def thinningRate : ℝ := ((2 : ℝ) ^ 17)⁻¹
+def thinningRate : ℝ := ((2 : ℝ) ^ 16)⁻¹
 /-- Candidate-filter mask rate `p_H`. -/
 def filterRate : ℝ := 3 / 4
 /-- Density mask rate `p_D`. -/
-def densityRate : ℝ := 31 / 64
+def densityRate : ℝ := 7 / 16
 /-- Probability of the maximum branch. -/
-def branchRate : ℝ := ((2 : ℝ) ^ 12)⁻¹
+def branchRate : ℝ := ((2 : ℝ) ^ 9)⁻¹
 /-- Low-hazard threshold of the paper's exit lemma (Lemma 4.2). -/
 def exitThreshold : ℝ := ((2 : ℝ) ^ 12)⁻¹
 /-- Squared exit mass per nonloop label. -/
-def exitMass : ℝ := 6 / 25
+def exitMass : ℝ := 67 / 250
 /-- Sample-to-rank coefficient `g = p_D · s / 2`. -/
-def retainedFraction : ℝ := 93 / 1600
+def retainedFraction : ℝ := 469 / 8000
 /-- Bound on the probability of the bad residual event. -/
 def residualTail : ℝ := ((2 : ℝ) ^ 10)⁻¹
-/-- Expected captured residual per label: `Λ/log 2 + 3/κ + 2^-17`. -/
-def residualError : ℝ := 1121 / 100000
+/-- Expected captured residual per label: `Λ/log(1/p_O) + 1/((1-p_O)κ)` plus the cap tail. -/
+def residualError : ℝ := 2005 / 100000
 /-- Coefficient of the group size in the transfer lemma. -/
-def transferError : ℝ := 115 / 10000
-/-- Cap on the density-generator budget: `⌊(9/16)|U|⌋ / κ`. -/
-def capBudget (n : ℕ) : ℕ := 9 * n / 16 / 2 ^ 12
+def transferError : ℝ := 101 / 5000
+/-- Cap on the density-generator budget: `⌊|U|/2⌋ / κ`. -/
+def capBudget (n : ℕ) : ℕ := n / 2 / ruleKappa
 /-- Coefficient of the candidate mass in the weighted payoff. -/
-def payoffError : ℝ := 2915 / 100000
+def payoffError : ℝ := 3373 / 100000
 /-- Small-maximum threshold factor `ε`; the threshold is `ε (1 - p_H) / κ`. -/
-def smallFraction : ℝ := ((2 : ℝ) ^ 8)⁻¹
+def smallFraction : ℝ := ((2 : ℝ) ^ 10)⁻¹
+
+lemma ruleKappa_pos : 0 < ruleKappa := by
+  norm_num [ruleKappa]
+
+lemma two_le_ruleKappa : 2 ≤ ruleKappa := by
+  norm_num [ruleKappa]
+
+lemma ruleKappa_cast : ((ruleKappa : ℕ) : ℝ) = densityThreshold := by
+  rfl
 
 /-- Success probability of the maximum rule, whose mask is the filter mask: the top label is
 unmasked and the second one masked. -/
@@ -54,7 +64,8 @@ def mainFraction : ℝ :=
 
 theorem constants_positive : 0 < weightBase ∧ 0 < densityThreshold ∧
     0 < thinningRate ∧ 0 < exitThreshold ∧ 0 < retainedFraction := by
-  norm_num [weightBase, densityThreshold, thinningRate, exitThreshold, retainedFraction]
+  norm_num [weightBase, densityThreshold, ruleKappa, thinningRate, exitThreshold,
+    retainedFraction]
 
 lemma rates_mem : 0 < filterRate ∧ filterRate < 1 ∧ 0 < densityRate ∧ densityRate < 1 ∧
     0 < branchRate ∧ branchRate < 1 ∧ thinningRate ≤ 1 := by
@@ -66,21 +77,28 @@ lemma retainedFraction_eq : retainedFraction = densityRate * exitMass / 2 := by
 lemma payoffError_ge :
     transferError + thinningRate * densityThreshold / 2 +
       (thinningRate * densityThreshold + densityRate) / (weightBase - 1) ≤ payoffError := by
-  norm_num [transferError, thinningRate, densityThreshold, densityRate, weightBase, payoffError]
+  norm_num [transferError, thinningRate, densityThreshold, ruleKappa, densityRate,
+    weightBase, payoffError]
+
+/-- Rate of the observed mask `D ∪ C` inside a group. -/
+def maskUnionRate : ℝ := densityRate + (1 - densityRate) * thinningRate
 
 lemma maskUnion_le_half : densityRate + (1 - densityRate) * thinningRate ≤ 1 / 2 := by
   norm_num [densityRate, thinningRate]
 
+lemma maskUnionRate_pos : 0 < maskUnionRate := by
+  norm_num [maskUnionRate, densityRate, thinningRate]
+
 lemma mainFraction_nonneg : 0 ≤ mainFraction := by
-  norm_num [mainFraction, weightBase, thinningRate, densityThreshold, filterRate,
+  norm_num [mainFraction, weightBase, thinningRate, densityThreshold, ruleKappa, filterRate,
     retainedFraction, smallFraction, payoffError]
 
 lemma smallThreshold_nonneg : 0 ≤ smallThreshold := by
-  norm_num [smallThreshold, smallFraction, filterRate, densityThreshold]
+  norm_num [smallThreshold, smallFraction, filterRate, densityThreshold, ruleKappa]
 
 /-- Fraction of the rounded optimum guaranteed by the mixed rule; after the random rounding
-offset it becomes `2^-40` of the true optimum. -/
-def roundedFraction : ℝ := ((2 : ℝ) ^ 40)⁻¹ * (8 * weightBase / (weightBase - 1))
+offset it becomes `2^-38` of the true optimum. -/
+def roundedFraction : ℝ := ((2 : ℝ) ^ 38)⁻¹ * (8 * weightBase / (weightBase - 1))
 
 lemma roundedFraction_nonneg : 0 ≤ roundedFraction := by
   norm_num [roundedFraction, weightBase]
@@ -89,23 +107,23 @@ lemma roundedFraction_nonneg : 0 ≤ roundedFraction := by
 theorem hidden_fraction_main :
     roundedFraction ≤ (1 - branchRate) * mainFraction := by
   norm_num [roundedFraction, mainFraction, weightBase, thinningRate, densityThreshold,
-    filterRate, retainedFraction, smallFraction, payoffError, branchRate]
+    ruleKappa, filterRate, retainedFraction, smallFraction, payoffError, branchRate]
 
 /-- Final constant, maximum case. -/
 theorem hidden_fraction_maximum :
     roundedFraction ≤ branchRate * (maximumFactor * smallThreshold) := by
   norm_num [roundedFraction, smallThreshold, smallFraction, filterRate, densityThreshold,
-    branchRate, weightBase, maximumFactor]
+    ruleKappa, branchRate, weightBase, maximumFactor]
 
 /-- Without the offset, the rule keeps `2^-46` of the true optimum. -/
 theorem plain_fraction : ((2 : ℝ) ^ 46)⁻¹ * weightBase ≤ roundedFraction := by
   norm_num [roundedFraction, weightBase]
 
-/-- With the offset: `roundedFraction · (1 - 2^-8)/8 = 2^-40`. -/
-theorem offset_fraction : roundedFraction * ((1 - 1 / 2 ^ 8) / 8) = ((2 : ℝ) ^ 40)⁻¹ := by
+/-- With the offset: `roundedFraction · (1 - 2^-8)/8 = 2^-38`. -/
+theorem offset_fraction : roundedFraction * ((1 - 1 / 2 ^ 8) / 8) = ((2 : ℝ) ^ 38)⁻¹ := by
   norm_num [roundedFraction, weightBase]
 
-theorem public_fraction_slack : ((2 : ℝ) ^ 310)⁻¹ ≤ ((2 : ℝ) ^ 40)⁻¹ := by
+theorem public_fraction_slack : ((2 : ℝ) ^ 310)⁻¹ ≤ ((2 : ℝ) ^ 38)⁻¹ := by
   apply inv_anti₀ (by positivity)
   exact pow_le_pow_right₀ (by norm_num) (by norm_num)
 

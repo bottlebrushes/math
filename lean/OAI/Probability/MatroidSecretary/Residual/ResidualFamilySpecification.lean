@@ -7,7 +7,7 @@ namespace MatroidProphet
 open Set Finset Pivots MainAlgorithm
 
 /-- Source `lem:pattern-family`, with its fixed-before-focal-bits quantifiers.
-The sharpened rule uses κ = 2^12; this statement covers every κ ≥ 2, with the
+The sharpened rule uses κ = ruleKappa; this statement covers every κ ≥ 2, with the
 sharpened family exponent `Pivots.residualExponent κ`. -/
 def PatternFamilyClaim : Prop :=
   ∀ {n : ℕ}

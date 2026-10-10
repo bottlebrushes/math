@@ -76,7 +76,7 @@ theorem all_orders {n : ℕ} (M : Matroid (Fin n)) (hE : M.E = Set.univ)
       ((selection M hE d w π).filter (fun e =>
         ∃ i, w e = some i ∧ h ≤ (groups M d w).idxOf i)).card) ∧
     (∀ A : Finset (Fin n), Disjoint A (pathGroups M d w h) →
-      thinningRate * (finalRankStatistic M hE (2^12)
+      thinningRate * (finalRankStatistic M hE ruleKappa
         (groupMask M d w d.D) (groupMask M d w d.C)
         (fun j => (A : Set (Fin n)) ∩ (pathGroups M d w j : Set (Fin n)))
         h (groups M d w).length (pathGroups M d w h)
@@ -89,7 +89,7 @@ theorem rank_cost {n : ℕ} (M : Matroid (Fin n)) (hE : M.E = Set.univ)
     (d : MainMasks n) (w : Fin n → Option ℤ) (h : ℕ)
     (hh : h < (groups M d w).length) :
     (listedZ M hE d w h : ℝ) ≤
-      (finalRankStatistic M hE (2^12) (groupMask M d w d.D)
+      (finalRankStatistic M hE ruleKappa (groupMask M d w d.D)
         (groupMask M d w d.C) (groupMask M d w d.T) h (groups M d w).length
         (groupMask M d w univ h)
         ((d.H ∪ d.D ∪ d.C : Finset (Fin n)) : Set (Fin n)) Set.univ

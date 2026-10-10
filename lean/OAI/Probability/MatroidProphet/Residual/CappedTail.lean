@@ -58,101 +58,106 @@ lemma residualBadIndicator_le_one (F : Finset (Finset α)) (t : ℝ) (S : Finset
     residualBadIndicator F t S ≤ 1 := by
   unfold residualBadIndicator; split_ifs <;> norm_num
 
-/-- Geometric tail sum. -/
-lemma sum_min_geometric (c : ℝ) (hc : 0 ≤ c) (X N : ℕ) :
-    (∑ x ∈ range N, min 1 (c * (1 / 2 : ℝ) ^ x)) ≤ X + 2 * c * (1 / 2 : ℝ) ^ X := by
-  induction N with
-  | zero => simp; positivity
-  | succ N ih =>
-    rw [sum_range_succ]
-    by_cases hN : N < X
-    · have h1 : min 1 (c * (1 / 2 : ℝ) ^ N) ≤ 1 := min_le_left _ _
-      -- the first X terms contribute at most one each
-      have hsplit : (∑ x ∈ range (N+1), min 1 (c * (1 / 2 : ℝ) ^ x)) ≤ (N + 1 : ℕ) := by
-        calc (∑ x ∈ range (N+1), min 1 (c * (1 / 2 : ℝ) ^ x)) ≤ ∑ x ∈ range (N+1), (1 : ℝ) :=
-              sum_le_sum (fun x _ => min_le_left _ _)
-          _ = (N + 1 : ℕ) := by simp
-      rw [← sum_range_succ]
-      have hX : ((N + 1 : ℕ) : ℝ) ≤ X := by exact_mod_cast hN
-      have : 0 ≤ 2 * c * (1 / 2 : ℝ) ^ X := by positivity
-      linarith
-    · -- for N ≥ X, add the geometric term
-      have hgeo : (∑ x ∈ range (N+1), min 1 (c * (1 / 2 : ℝ) ^ x)) ≤
-          X + 2 * c * (1 / 2 : ℝ) ^ X * (1 - (1 / 2 : ℝ) ^ (N + 1 - X)) := by
-        have hb : ∀ M : ℕ, (∑ x ∈ range (X + M), min 1 (c * (1 / 2 : ℝ) ^ x)) ≤
-            X + 2 * c * (1 / 2 : ℝ) ^ X * (1 - (1 / 2 : ℝ) ^ M) := by
-          intro M
-          induction M with
-          | zero =>
-            simp only [add_zero, pow_zero, sub_self, mul_zero]
-            calc (∑ x ∈ range X, min 1 (c * (1 / 2 : ℝ) ^ x)) ≤ ∑ x ∈ range X, (1 : ℝ) :=
-                  sum_le_sum (fun x _ => min_le_left _ _)
-              _ = X := by simp
-          | succ M ihM =>
-            rw [← add_assoc, sum_range_succ]
-            have hm : min 1 (c * (1 / 2 : ℝ) ^ (X + M)) ≤ c * (1 / 2 : ℝ) ^ (X + M) :=
-              min_le_right _ _
-            have he : c * (1 / 2 : ℝ) ^ (X + M) =
-                2 * c * (1 / 2 : ℝ) ^ X * ((1 / 2 : ℝ) ^ M - (1 / 2 : ℝ) ^ (M + 1)) := by
-              rw [pow_add, pow_succ]; ring
-            have hm' := hm.trans he.le
-            set Y := 2 * c * (1 / 2 : ℝ) ^ X
-            have hring : (X : ℝ) + Y * (1 - (1 / 2 : ℝ) ^ M) +
-                Y * ((1 / 2 : ℝ) ^ M - (1 / 2 : ℝ) ^ (M + 1)) =
-                X + Y * (1 - (1 / 2 : ℝ) ^ (M + 1)) := by ring
-            linarith
-        have := hb (N + 1 - X)
-        rwa [show X + (N + 1 - X) = N + 1 by omega] at this
-      rw [← sum_range_succ]
-      have : 0 ≤ 2 * c * (1 / 2 : ℝ) ^ X * (1 / 2 : ℝ) ^ (N + 1 - X) := by positivity
-      nlinarith
+/-- Geometric tail sum with ratio `ρ`. -/
+lemma sum_min_geometric (ρ c : ℝ) (hρ0 : 0 ≤ ρ) (hρ1 : ρ < 1) (hc : 0 ≤ c) (X N : ℕ) :
+    (∑ x ∈ range N, min 1 (c * ρ ^ x)) ≤ X + c * ρ ^ X / (1 - ρ) := by
+  have h1ρ : 0 < 1 - ρ := by linarith
+  have hY0 : 0 ≤ c * ρ ^ X / (1 - ρ) := by positivity
+  have hfirst : ∀ M ≤ X, (∑ x ∈ range M, min 1 (c * ρ ^ x)) ≤ M := by
+    intro M _
+    calc (∑ x ∈ range M, min 1 (c * ρ ^ x)) ≤ ∑ x ∈ range M, (1 : ℝ) :=
+          sum_le_sum (fun x _ => min_le_left _ _)
+      _ = M := by simp
+  have hb : ∀ M : ℕ, (∑ x ∈ range (X + M), min 1 (c * ρ ^ x)) ≤
+      X + c * ρ ^ X / (1 - ρ) * (1 - ρ ^ M) := by
+    intro M
+    induction M with
+    | zero => simpa using hfirst X le_rfl
+    | succ M ihM =>
+      rw [← add_assoc, sum_range_succ]
+      have hm : min 1 (c * ρ ^ (X + M)) ≤ c * ρ ^ (X + M) := min_le_right _ _
+      have he : c * ρ ^ (X + M) = c * ρ ^ X / (1 - ρ) * (ρ ^ M - ρ ^ (M + 1)) := by
+        field_simp
+        rw [pow_add, pow_succ]; ring
+      have hring : (X : ℝ) + c * ρ ^ X / (1 - ρ) * (1 - ρ ^ M) +
+          c * ρ ^ X / (1 - ρ) * (ρ ^ M - ρ ^ (M + 1)) =
+          X + c * ρ ^ X / (1 - ρ) * (1 - ρ ^ (M + 1)) := by ring
+      linarith [hm.trans he.le]
+  by_cases hN : N ≤ X
+  · have := hfirst N hN
+    have hX : (N : ℝ) ≤ X := by exact_mod_cast hN
+    linarith
+  · have h := hb (N - X)
+    rw [show X + (N - X) = N by omega] at h
+    have hp : 0 ≤ c * ρ ^ X / (1 - ρ) * ρ ^ (N - X) := by positivity
+    nlinarith
 
-/-- Layer cake for the largest captured residual. -/
-theorem bitsExpectation_capturedMax_le (q : α → ℝ)
-    (hq0 : ∀ e, 0 ≤ q e) (hqhalf : ∀ e, q e ≤ 1 / 2)
+/-- Layer cake for the largest captured residual at mask rate at most `ρ`. -/
+theorem bitsExpectation_capturedMax_le (q : α → ℝ) (ρ : ℝ)
+    (hq0 : ∀ e, 0 ≤ q e) (hqρ : ∀ e, q e ≤ ρ) (hρ0 : 0 < ρ) (hρ1 : ρ < 1)
     (V : Finset α) (F : Finset (Finset α)) (hF : ∀ R ∈ F, R ⊆ V) (Λ : ℝ) (hΛ : 0 ≤ Λ)
     (hcard : (F.card : ℝ) ≤ Real.exp (Λ * V.card)) :
-    bitsExpectation q V (fun S => (capturedMax F S : ℝ)) ≤ Λ * V.card / Real.log 2 + 3 := by
+    bitsExpectation q V (fun S => (capturedMax F S : ℝ)) ≤
+      Λ * V.card / Real.log (1 / ρ) + 1 / (1 - ρ) := by
   classical
-  have hq1 : ∀ e, q e ≤ 1 := fun e => (hqhalf e).trans (by norm_num)
-  have hlog : 0 < Real.log 2 := Real.log_pos (by norm_num)
+  have hq1 : ∀ e, q e ≤ 1 := fun e => (hqρ e).trans hρ1.le
+  have hlog : 0 < Real.log (1 / ρ) := Real.log_pos (by rw [lt_div_iff₀ hρ0]; linarith)
   have hstep (x : ℕ) : bitsExpectation q V (fun S => residualBadIndicator F x S) ≤
-      min 1 ((F.card : ℝ) * (1 / 2 : ℝ) ^ x) := by
+      min 1 (((F.card : ℝ) * ρ) * ρ ^ x) := by
     apply le_min
     · calc _ ≤ bitsExpectation q V (fun _ => (1 : ℝ)) :=
             bitsExpectation_mono q hq0 hq1 V (fun S _ => residualBadIndicator_le_one F _ S)
         _ = 1 := bitsExpectation_const q V 1
-    · have h := bitsExpectation_residualBad_le q hq0 hqhalf V F hF x
-      have heq : Real.exp (-(x : ℝ) * Real.log 2) = (1 / 2 : ℝ) ^ x := by
-        rw [neg_mul, Real.exp_neg, Real.exp_nat_mul, Real.exp_log (by norm_num)]; simp
-      rwa [heq] at h
-  set X := ⌈Λ * V.card / Real.log 2⌉₊
-  have hX : (X : ℝ) ≤ Λ * V.card / Real.log 2 + 1 :=
-    (Nat.ceil_lt_add_one (by positivity)).le
-  have hFX : (F.card : ℝ) * (1 / 2 : ℝ) ^ X ≤ 1 := by
-    have h2 : (1 / 2 : ℝ) ^ X = Real.exp (-(X : ℝ) * Real.log 2) := by
-      rw [neg_mul, Real.exp_neg, Real.exp_nat_mul, Real.exp_log (by norm_num)]; simp
-    rw [h2]
-    calc (F.card : ℝ) * Real.exp (-(X : ℝ) * Real.log 2)
-        ≤ Real.exp (Λ * V.card) * Real.exp (-(X : ℝ) * Real.log 2) :=
-          mul_le_mul_of_nonneg_right hcard (Real.exp_nonneg _)
-      _ = Real.exp (Λ * V.card - X * Real.log 2) := by rw [← Real.exp_add]; ring_nf
-      _ ≤ Real.exp 0 := by
-          apply Real.exp_le_exp.mpr
-          have hc := Nat.le_ceil (Λ * V.card / Real.log 2)
-          rw [div_le_iff₀ hlog] at hc
-          linarith
+    · calc _ ≤ bitsExpectation q V (fun S => ∑ R ∈ F,
+            if (x : ℝ) < (R.card : ℝ) then (if R ⊆ S then (1 : ℝ) else 0) else 0) :=
+            bitsExpectation_mono q hq0 hq1 V (fun S _ => residualBad_indicator_le F x S)
+        _ = ∑ R ∈ F, bitsExpectation q V (fun S =>
+            if (x : ℝ) < (R.card : ℝ) then (if R ⊆ S then (1 : ℝ) else 0) else 0) :=
+            bitsExpectation_sum q V F _
+        _ ≤ ∑ _R ∈ F, ρ ^ (x + 1) := by
+            apply sum_le_sum
+            intro R hRF
+            by_cases hRt : (x : ℝ) < (R.card : ℝ)
+            · simp only [hRt, ite_true]
+              rw [bitsExpectation_contains q V R (hF R hRF)]
+              have hxR : x + 1 ≤ R.card := by exact_mod_cast hRt
+              calc ∏ e ∈ R, q e ≤ ∏ _e ∈ R, ρ :=
+                    Finset.prod_le_prod₀ (fun e _ => hq0 e) (fun e _ => hqρ e)
+                _ = ρ ^ R.card := by simp
+                _ ≤ ρ ^ (x + 1) := pow_le_pow_of_le_one hρ0.le hρ1.le hxR
+            · simp only [hRt, ite_false, bitsExpectation_const]
+              positivity
+        _ = ((F.card : ℝ) * ρ) * ρ ^ x := by rw [sum_const, nsmul_eq_mul, pow_succ]; ring
+  set X := ⌊Λ * V.card / Real.log (1 / ρ)⌋₊
+  have hX : (X : ℝ) ≤ Λ * V.card / Real.log (1 / ρ) := Nat.floor_le (by positivity)
+  have hFX : (F.card : ℝ) * ρ * ρ ^ X ≤ 1 := by
+    have hlt := Nat.lt_floor_add_one (Λ * V.card / Real.log (1 / ρ))
+    rw [div_lt_iff₀ hlog] at hlt
+    have hpow : ρ ^ (X + 1) = Real.exp (-((X : ℝ) + 1) * Real.log (1 / ρ)) := by
+      rw [neg_mul, Real.exp_neg, ← Real.exp_log (pow_pos hρ0 (X + 1)), Real.log_pow,
+        one_div, Real.log_inv, ← Real.exp_neg]
+      push_cast; ring_nf
+    calc (F.card : ℝ) * ρ * ρ ^ X = (F.card : ℝ) * ρ ^ (X + 1) := by ring
+      _ ≤ Real.exp (Λ * V.card) * Real.exp (-((X : ℝ) + 1) * Real.log (1 / ρ)) := by
+          rw [hpow]; exact mul_le_mul_of_nonneg_right hcard (Real.exp_nonneg _)
+      _ = Real.exp (Λ * V.card - ((X : ℝ) + 1) * Real.log (1 / ρ)) := by
+          rw [← Real.exp_add]; ring_nf
+      _ ≤ Real.exp 0 := Real.exp_le_exp.mpr (by linarith)
       _ = 1 := Real.exp_zero
+  have h1ρ : 0 < 1 - ρ := by linarith
   calc bitsExpectation q V (fun S => (capturedMax F S : ℝ))
       ≤ bitsExpectation q V (fun S => ∑ x ∈ range V.card, residualBadIndicator F x S) :=
         bitsExpectation_mono q hq0 hq1 V (fun S _ => capturedMax_le_sum F V S hF)
     _ = ∑ x ∈ range V.card, bitsExpectation q V (fun S => residualBadIndicator F x S) :=
         bitsExpectation_sum q V _ _
-    _ ≤ ∑ x ∈ range V.card, min 1 ((F.card : ℝ) * (1 / 2 : ℝ) ^ x) :=
+    _ ≤ ∑ x ∈ range V.card, min 1 (((F.card : ℝ) * ρ) * ρ ^ x) :=
         sum_le_sum (fun x _ => hstep x)
-    _ ≤ X + 2 * (F.card : ℝ) * (1 / 2 : ℝ) ^ X :=
-        sum_min_geometric _ (Nat.cast_nonneg _) X _
-    _ ≤ Λ * V.card / Real.log 2 + 3 := by nlinarith
+    _ ≤ X + (F.card : ℝ) * ρ * ρ ^ X / (1 - ρ) :=
+        sum_min_geometric ρ _ hρ0.le hρ1 (by positivity) X _
+    _ ≤ Λ * V.card / Real.log (1 / ρ) + 1 / (1 - ρ) := by
+        have : (F.card : ℝ) * ρ * ρ ^ X / (1 - ρ) ≤ 1 / (1 - ρ) :=
+          div_le_div_of_nonneg_right hFX h1ρ.le
+        linarith
 
 /-- The moment generating function of a Bernoulli sample size. -/
 lemma bitsExpectation_pow_card (p r : ℝ) (V : Finset α) :

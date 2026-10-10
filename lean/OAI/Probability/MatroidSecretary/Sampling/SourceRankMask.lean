@@ -75,12 +75,12 @@ lemma groupMask_disjoint_H (M : Matroid (Fin n)) (d : MainMasks n)
 lemma listedZ_sourceMask (M : Matroid (Fin n)) (hE : M.E = Set.univ)
     (d : MainMasks n) (w : Fin n → Option ℤ) (h : ℕ) :
     listedZ M hE d w h =
-      nominalRankStatistic M hE (2^12) (groupMask M d w d.D) (groupMask M d w d.C)
+      nominalRankStatistic M hE ruleKappa (groupMask M d w d.D) (groupMask M d w d.C)
         (groupMask M d w d.T) h (groupMask M d w univ h)
         ((d.D ∪ d.C : Finset (Fin n)) : Set (Fin n)) (boolParity d.odd) := by
   unfold listedZ
   simpa only [Finset.coe_union, Set.union_assoc] using
-    nominalRankStatistic_mask_union M hE (2^12) (groupMask M d w d.D)
+    nominalRankStatistic_mask_union M hE ruleKappa (groupMask M d w d.D)
       (groupMask M d w d.C) (groupMask M d w d.T) h (groupMask M d w univ h)
       (d.H : Set (Fin n)) ((d.D ∪ d.C : Finset (Fin n)) : Set (Fin n))
       (boolParity d.odd) (groupMask_disjoint_H M d w univ h)
@@ -89,13 +89,13 @@ lemma listedZ_sourceMask (M : Matroid (Fin n)) (hE : M.E = Set.univ)
 lemma listedLambda_sourceMask (M : Matroid (Fin n)) (hE : M.E = Set.univ)
     (d : MainMasks n) (w : Fin n → Option ℤ) (h : ℕ) :
     listedLambda M hE d w h =
-      finalRankStatistic M hE (2^12) (groupMask M d w d.D) (groupMask M d w d.C)
+      finalRankStatistic M hE ruleKappa (groupMask M d w d.D) (groupMask M d w d.C)
         (groupMask M d w d.T) h (groups M d w).length (groupMask M d w univ h)
         ((d.D ∪ d.C : Finset (Fin n)) : Set (Fin n)) (d.T : Set (Fin n))
         (boolParity d.odd) := by
   unfold listedLambda
   simpa only [Finset.coe_union, Set.union_assoc] using
-    finalRankStatistic_mask_union M hE (2^12) (groupMask M d w d.D)
+    finalRankStatistic_mask_union M hE ruleKappa (groupMask M d w d.D)
       (groupMask M d w d.C) (groupMask M d w d.T) h (groups M d w).length
       (groupMask M d w univ h) (d.H : Set (Fin n))
       ((d.D ∪ d.C : Finset (Fin n)) : Set (Fin n)) (d.T : Set (Fin n))

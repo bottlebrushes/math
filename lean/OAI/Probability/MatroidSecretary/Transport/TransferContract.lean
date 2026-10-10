@@ -73,7 +73,7 @@ theorem transfer_keys {n : ℕ} (M : Matroid (Fin n)) (hE : M.E = Set.univ)
   simpa only [Set.ncard_coe_finset, d, Y] using h
 
 /-- `lem:transfer` for the manuscript's actual rounded nonnegative weights,
-with the sharpened constants `retainedFraction` and `transferError` and `κ = 2^12`. -/
+with the sharpened constants `retainedFraction` and `transferError` and `κ = ruleKappa`. -/
 theorem transfer {n : ℕ} (M : Matroid (Fin n)) (hE : M.E = Set.univ)
     (w : Weights n) (_hw : ∀ e, 0 ≤ w e) (H : Finset (Fin n)) (i : ℤ) :
     let s : Fin n → Option ℤ := fun e => roundedLevel weightBase (w e)
