@@ -40,11 +40,11 @@ lemma eligible_mem_final (M : Matroid (Fin n)) (hE : M.E = Set.univ)
   have hi : i ∈ groups M d seen := he.2.2.1
   have hidx : (groups M d seen).idxOf i < (groups M d seen).length :=
     List.idxOf_lt_length_of_mem hi
-  have hm := nominalBirth_mem M hE (2^100) (groupMask M d seen d.D)
+  have hm := nominalBirth_mem M hE ruleKappa (groupMask M d seen d.D)
     (groupMask M d seen d.C) ((groups M d seen).idxOf i) e
-  have hs := nominal_subset_guarded M hE (2^100) (groupMask M d seen d.D)
+  have hs := nominal_subset_guarded M hE ruleKappa (groupMask M d seen d.D)
     (groupMask M d seen d.C) ((groups M d seen).idxOf i) (birth M hE d seen e i) hm
-  exact guardedPath_group_mono M hE (2^100) (groupMask M d seen d.D)
+  exact guardedPath_group_mono M hE ruleKappa (groupMask M d seen d.D)
     (groupMask M d seen d.C) _ (Nat.succ_le_of_lt hidx) hs
 
 lemma assigned_lower_in_base (M : Matroid (Fin n)) (hE : M.E = Set.univ)
@@ -65,7 +65,7 @@ lemma assigned_lower_in_base (M : Matroid (Fin n)) (hE : M.E = Set.univ)
       assignedLayer (assign M hE d seen) v f - 2 := by omega
   have hm := eligible_mem_final M hE d seen e i hei
   rw [hbi] at hm
-  exact guardedPath_mono M hE (2^100) (groupMask M d seen d.D)
+  exact guardedPath_mono M hE ruleKappa (groupMask M d seen d.D)
     (groupMask M d seen d.C) (groups M d seen).length hgap hm
 
 theorem core_feasible (M : Matroid (Fin n)) (hE : M.E = Set.univ) :

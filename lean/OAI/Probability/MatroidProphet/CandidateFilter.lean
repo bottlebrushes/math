@@ -92,10 +92,10 @@ lemma sum_positiveGreedy (M : Matroid (Fin n)) (a : Fin n → Option ℤ) (B : �
 
 theorem expectation_positiveGreedy_survivors (M : Matroid (Fin n)) (hE : M.E = Set.univ)
     (w : Weights n) {B : ℝ} (hB : 1 < B) :
-    bitsExpectation (fun _ => (1 / 2 : ℝ)) Finset.univ
+    bitsExpectation (fun _ => filterRate) Finset.univ
       (fun H => ∑ e ∈ positiveGreedy M (fun e => roundedLevel B (w e)) \ H,
-        roundedWeight B (w e)) = optimum M (fun e => roundedWeight B (w e)) / 2 := by
-  rw [Candidates.expectation_sdiff_fair Finset.univ _ (Finset.subset_univ _) _]
+        roundedWeight B (w e)) = (1 - filterRate) * optimum M (fun e => roundedWeight B (w e)) := by
+  rw [Candidates.expectation_sdiff_rate filterRate Finset.univ _ (Finset.subset_univ _) _]
   rw [show (∑ e ∈ positiveGreedy M (fun e => roundedLevel B (w e)), roundedWeight B (w e)) =
       ∑ e ∈ Candidates.greedy M (Priority.time (fun e => roundedLevel B (w e))) Finset.univ,
         roundedWeight B (w e) from sum_positiveGreedy M _ B]
@@ -103,20 +103,21 @@ theorem expectation_positiveGreedy_survivors (M : Matroid (Fin n)) (hE : M.E = S
 
 theorem expectation_candidateLabels_le_optimum (M : Matroid (Fin n)) (hE : M.E = Set.univ)
     (w : Weights n) (B : ℝ) :
-    bitsExpectation (fun _ => (1 / 2 : ℝ)) Finset.univ
+    filterRate * bitsExpectation (fun _ => filterRate) Finset.univ
       (fun H => ∑ e ∈ candidateLabels M (fun e => roundedLevel B (w e)) H,
-        roundedWeight B (w e)) ≤ optimum M (fun e => roundedWeight B (w e)) := by
-  have heq : bitsExpectation (fun _ => (1 / 2 : ℝ)) Finset.univ
+        roundedWeight B (w e)) ≤ (1 - filterRate) * optimum M (fun e => roundedWeight B (w e)) := by
+  have heq : bitsExpectation (fun _ => filterRate) Finset.univ
       (fun H => ∑ e ∈ candidateLabels M (fun e => roundedLevel B (w e)) H,
         roundedWeight B (w e)) =
-      bitsExpectation (fun _ => (1 / 2 : ℝ)) Finset.univ
+      bitsExpectation (fun _ => filterRate) Finset.univ
       (fun H => ∑ e ∈ Candidates.candidates M (Priority.time (fun e => roundedLevel B (w e)))
         Finset.univ H, roundedWeight B (w e)) := by
     apply bitsExpectation_congr
     intro H _
     exact sum_candidateLabels M _ H B
   rw [heq]
-  exact Candidates.expectation_candidates_le_optimum M _ (Priority.time_injective _)
+  exact Candidates.expectation_candidates_le_optimum filterRate rates_mem.1.le rates_mem.2.1.le
+    M _ (Priority.time_injective _)
     Finset.univ (fun e _ => by simp [hE]) _
 
 lemma candidate_observed_hidden (M : Matroid (Fin n)) (hE : M.E = Set.univ)

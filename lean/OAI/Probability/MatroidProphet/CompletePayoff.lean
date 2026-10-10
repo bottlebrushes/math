@@ -10,13 +10,13 @@ open MeasureTheory Finset MainAlgorithm
 
 noncomputable def mainPayoff {n : ℕ} (M : Matroid (Fin n)) (hE : M.E = Set.univ)
     (w : Weights n) : ℝ :=
-  bitsExpectation (fun _ => (1/2 : ℝ)) Finset.univ (fun H =>
+  bitsExpectation (fun _ => filterRate) Finset.univ (fun H =>
     mainMean ⟨H, ∅, ∅, ∅, false⟩
       (fun d => mainWorstRounded M hE d (fun e => roundedLevel weightBase (w e))))
 
 lemma mainPayoff_nonneg {n : ℕ} (M : Matroid (Fin n)) (hE : M.E = Set.univ)
     (w : Weights n) : 0 ≤ mainPayoff M hE w := by
-  apply bitsExpectation_nonneg _ (fun _ => by norm_num) (fun _ => by norm_num)
+  apply bitsExpectation_nonneg _ (fun _ => rates_mem.1.le) (fun _ => rates_mem.2.1.le)
   intro H _
   have h := mainMean_mono (⟨H, ∅, ∅, ∅, false⟩ : MainMasks n)
     (fun d _ => mainWorstRounded_nonneg M hE d (fun e => roundedLevel weightBase (w e)))
@@ -29,8 +29,8 @@ lemma mainMean_H {n : ℕ} (d : MainMasks n) (f : Finset (Fin n) → ℝ) :
 
 lemma integral_sourceSeedLaw_mainMean {n : ℕ} (f : MainMasks n → Bool → ℝ) :
     (∫ r, f (mainMasks r) (mainBranch r) ∂sourceSeedLaw n) =
-      bitsExpectation (fun _ => (1/2 : ℝ)) Finset.univ (fun H =>
-        mainMean ⟨H, ∅, ∅, ∅, false⟩ (fun d => fairParityExpectation (fun b => f d b))) := by
+      bitsExpectation (fun _ => filterRate) Finset.univ (fun H =>
+        mainMean ⟨H, ∅, ∅, ∅, false⟩ (fun d => branchExpectation (fun b => f d b))) := by
   simpa only [mainMean, tripleMaskExpectation, withMasks] using integral_sourceSeedLaw f
 
 lemma completeHiddenRule_lower {n : ℕ} (M : Matroid (Fin n)) (hE : M.E = Set.univ)
@@ -48,30 +48,30 @@ lemma completeHiddenRule_lower {n : ℕ} (M : Matroid (Fin n)) (hE : M.E = Set.u
 
 lemma integrated_branch_lower {n : ℕ} (M : Matroid (Fin n)) (hE : M.E = Set.univ)
     (w : Weights n) (hw : ∀ e, 0 ≤ w e) :
-    (mainPayoff M hE w + maximumPayoff M w) / 2 ≤
+    (1 - branchRate) * mainPayoff M hE w + branchRate * maximumPayoff M w ≤
       ∫ r, hiddenWorstReward (completeHiddenRule M hE) w r ∂sourceSeedLaw n := by
   have h := integral_mono (μ := sourceSeedLaw n) Integrable.of_finite Integrable.of_finite
     (fun r => completeHiddenRule_lower M hE w hw r)
   have heq : (∫ r, (if mainBranch r then
       mainWorstRounded M hE (mainMasks r) (fun e => roundedLevel weightBase (w e))
       else maximumForMask M w (mainMasks r).H) ∂sourceSeedLaw n) =
-      (mainPayoff M hE w + maximumPayoff M w) / 2 := by
+      (1 - branchRate) * mainPayoff M hE w + branchRate * maximumPayoff M w := by
     rw [integral_sourceSeedLaw_mainMean (fun d b => if b then
       mainWorstRounded M hE d (fun e => roundedLevel weightBase (w e))
       else maximumForMask M w d.H)]
-    have hf : (fun d : MainMasks n => fairParityExpectation (fun b => if b then
+    have hf : (fun d : MainMasks n => branchExpectation (fun b => if b then
         mainWorstRounded M hE d (fun e => roundedLevel weightBase (w e))
         else maximumForMask M w d.H)) =
-        (fun d => (1/2 : ℝ) *
-          (mainWorstRounded M hE d (fun e => roundedLevel weightBase (w e)) + maximumForMask M w d.H)) := by
+        (fun d => (1 - branchRate) *
+          mainWorstRounded M hE d (fun e => roundedLevel weightBase (w e)) +
+            branchRate * maximumForMask M w d.H) := by
       funext d
-      simp only [fairParityExpectation, Bool.false_eq_true, ↓reduceIte]
-      ring
+      simp only [branchExpectation, Bool.false_eq_true, ↓reduceIte]
     rw [hf]
-    simp_rw [mainMean_mul, mainMean_add, mainMean_H]
-    rw [bitsExpectation_mul_const, bitsExpectation_add, ← maximumPayoff_eq_masks]
-    change (1/2 : ℝ) * (mainPayoff M hE w + maximumPayoff M w) = _
-    ring
+    simp_rw [mainMean_add, mainMean_mul, mainMean_H]
+    rw [bitsExpectation_add, bitsExpectation_mul_const, bitsExpectation_mul_const,
+      ← maximumPayoff_eq_masks]
+    rfl
   rw [heq] at h
   exact h
 

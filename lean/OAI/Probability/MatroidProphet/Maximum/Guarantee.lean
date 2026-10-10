@@ -19,21 +19,20 @@ lemma le_hiddenWorstReward {bits : ℕ} (A : HiddenRule n bits) (w : Weights n)
   intro π _
   exact h π
 
-theorem maximum_integral_top (M : Matroid (Fin n))
+theorem maximum_integral_top (p : ℝ) (hp0 : 0 ≤ p) (hp1 : p ≤ 1) (M : Matroid (Fin n))
     (key : ℝ → K) (hkey : Measurable key) (active : K → Prop)
     (w : Weights n) (hw : ∀ e, 0 ≤ w e) (g : Fin n)
     (hg : M.Indep ({g} : Set (Fin n))) (hag : active (key (w g)))
     (htop : ∀ f, M.Indep ({f} : Set (Fin n)) → active (key (w f)) → f ≠ g →
       higher (g, key (w g)) (f, key (w f))) :
-    w g / 4 ≤ ∫ r, hiddenWorstReward
+    p * (1 - p) * w g ≤ ∫ r, hiddenWorstReward
       (maximumHidden M key hkey active (seedSet (bits := n))) w r
-      ∂bernoulliSeedLaw (fun _ => (1 / 2 : ℝ))
-        (fun _ => by norm_num) (fun _ => by norm_num) := by
+      ∂bernoulliSeedLaw (fun _ => p) (fun _ => hp0) (fun _ => hp1) := by
   classical
   let A := maximumHidden M key hkey active (seedSet (bits := n))
   let F : Finset (Fin n) → ℝ := fun H => hiddenWorstReward A w (setSeed H)
   rw [integral_bernoulliSeedLaw]
-  change w g / 4 ≤ bitsExpectation (fun _ => (1 / 2 : ℝ)) Finset.univ F
+  change p * (1 - p) * w g ≤ bitsExpectation (fun _ => p) Finset.univ F
   have hF : ∀ H ⊆ Finset.univ, 0 ≤ F H :=
     fun H _ => hiddenWorstReward_nonneg A w hw (setSeed H)
   let P : Finset (Fin n) := Finset.univ.filter fun f =>
@@ -41,7 +40,7 @@ theorem maximum_integral_top (M : Matroid (Fin n))
   by_cases hP : P.Nonempty
   · obtain ⟨h, hhP, hsecond⟩ := exists_top (fun f => key (w f)) P hP
     have hh := (Finset.mem_filter.mp hhP).2
-    apply maximum_expectation_two Finset.univ g h (Finset.mem_univ _) (Finset.mem_univ _)
+    apply maximum_expectation_two p hp0 hp1 Finset.univ g h (Finset.mem_univ _) (Finset.mem_univ _)
       (Ne.symm hh.2.2) F (w g) hF
     intro H _ hgH hhH
     apply le_hiddenWorstReward
@@ -52,7 +51,7 @@ theorem maximum_integral_top (M : Matroid (Fin n))
       (by simpa using hgH) (by simpa using hhH)
     exact (maximumHidden_single_qualifier M key hkey active seedSet w (setSeed H) g
       (by simpa using hgH) hqual π).symm.le
-  · apply maximum_expectation_one Finset.univ g (Finset.mem_univ _) F (w g) (hw g) hF
+  · apply maximum_expectation_one p hp0 hp1 Finset.univ g (Finset.mem_univ _) F (w g) (hw g) hF
     intro H _ hgH
     apply le_hiddenWorstReward
     intro π

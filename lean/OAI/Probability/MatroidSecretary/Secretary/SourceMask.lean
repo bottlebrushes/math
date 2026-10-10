@@ -1,3 +1,4 @@
+import OAI.Probability.MatroidSecretary.Secretary.MaskModel
 import OAI.Probability.MatroidProphet.Main
 
 namespace OAI
@@ -21,15 +22,9 @@ lemma bitsExpectation_union_three {α : Type*} [DecidableEq α]
   exact bitsExpectation_union p (fun e => q e + (1 - q e) * r e) V f
 
 lemma source_main_mask_rate :
-    (1 / 2 : ℝ) + (1 - 1 / 2) * (1 / 4 + (1 - 1 / 4) * thinningRate) =
-      5 / 8 + 3 * ((2 : ℝ) ^ 143)⁻¹ := by
-  norm_num [thinningRate]
-
-lemma source_main_mask_rate_pos : 0 < (5 / 8 : ℝ) + 3 * ((2 : ℝ) ^ 143)⁻¹ := by
-  norm_num
-
-lemma source_main_mask_rate_lt_one : (5 / 8 : ℝ) + 3 * ((2 : ℝ) ^ 143)⁻¹ < 1 := by
-  norm_num
+    filterRate + (1 - filterRate) * (densityRate + (1 - densityRate) * thinningRate) =
+      Secretary.sacrificeRate true := by
+  simp [Secretary.sacrificeRate]
 
 lemma completeHiddenRule_mask_eq {n : ℕ} (M : Matroid (Fin n))
     (hE : M.E = Set.univ) (r : Seed (mainSeedBits n)) :
@@ -41,18 +36,14 @@ lemma completeHiddenRule_mask_eq {n : ℕ} (M : Matroid (Fin n))
 lemma integral_source_branch_mask {n : ℕ} (M : Matroid (Fin n))
     (hE : M.E = Set.univ) (f : Bool → Finset (Fin n) → ℝ) :
     (∫ r, f (mainBranch r) ((completeHiddenRule M hE).mask r) ∂sourceSeedLaw n) =
-      (bitsExpectation (fun _ : Fin n => (1 / 2 : ℝ)) univ (f false) +
-       bitsExpectation (fun _ : Fin n => (5 / 8 : ℝ) + 3 * ((2 : ℝ) ^ 143)⁻¹)
-         univ (f true)) / 2 := by
+      branchRate * bitsExpectation (fun _ : Fin n => filterRate) univ (f false) +
+       (1 - branchRate) * bitsExpectation (fun _ : Fin n => Secretary.sacrificeRate true)
+         univ (f true) := by
   simp_rw [completeHiddenRule_mask_eq]
   rw [integral_sourceSeedLaw (fun d b => f b (if b then d.H ∪ d.D ∪ d.C else d.H))]
-  simp only [fairParityExpectation, Bool.false_eq_true, ↓reduceIte]
-  simp only [bitsExpectation_const]
-  have hsplit (H D C : Finset (Fin n)) :
-      ((f false H + f true (H ∪ D ∪ C)) / 2 +
-        (f false H + f true (H ∪ D ∪ C)) / 2) / 2 =
-      (1 / 2 : ℝ) * f false H + (1 / 2 : ℝ) * f true (H ∪ D ∪ C) := by ring
-  simp_rw [hsplit, bitsExpectation_add, bitsExpectation_mul_const, bitsExpectation_const]
+  simp only [branchExpectation, fairParityExpectation, add_self_div_two,
+    Bool.false_eq_true, ↓reduceIte]
+  simp only [bitsExpectation_const, bitsExpectation_add, bitsExpectation_mul_const]
   rw [bitsExpectation_union_three]
   simp_rw [source_main_mask_rate]
   ring

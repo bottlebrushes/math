@@ -1,4 +1,5 @@
 import OAI.Probability.MatroidProphet.RankCost
+import OAI.Probability.MatroidProphet.OwnGuard
 import OAI.Probability.MatroidProphet.Residual.Statistics
 import OAI.Probability.MatroidProphet.ConditionalThinning
 
@@ -158,6 +159,81 @@ theorem expected_nominal_to_final (M : Matroid α) (hE : M.E = Set.univ)
         (κ * (C h).ncard + ∑ j ∈ range later,
           (κ * (C (h+1+j)).ncard + (D (h+1+j)).ncard) : ℕ) := by
     have hn := testRankStatistic_le_final_cost M hE κ hκ D C
+      (fun j => (T : Set α) ∩ (G j : Set α)) h later (G h) O Set.univ ε
+    have htest : testRankStatistic M hE κ D C (fun j => (T : Set α) ∩ (G j : Set α))
+        h (G h) O Set.univ ε = nominalRankStatistic M hE κ D C
+        (fun j => (T : Set α) ∩ (G j : Set α)) h (G h) O ε := by
+      simp only [testRankStatistic, nominalRankStatistic, Set.inter_univ]
+    rw [htest, Nat.add_assoc] at hn
+    exact_mod_cast hn
+  have hm := bitsExpectation_mono (fun _ : α => t) (fun _ => ht0) (fun _ => ht1)
+    univ (fun T _ => hp T)
+  simp only [bitsExpectation_add, bitsExpectation_mul_left, bitsExpectation_const] at hm
+  have hs := mul_le_mul_of_nonneg_left ht (Nat.cast_nonneg κ : (0:ℝ) ≤ κ)
+  have hc := mul_le_mul_of_nonneg_left hm ht0
+  nlinarith
+
+/-- Own guards entering the layer bases of parity `ε`. -/
+noncomputable def ownGuardCost (M : Matroid α) (hE : M.E = Set.univ) (κ : ℕ)
+    (D C : ℕ → Set α) (h : ℕ) (ε : Fin 2) : ℕ :=
+  ∑ b ∈ parityPoints (activation h) ε, (ownGuards M hE κ D C h b).ncard
+
+lemma ownGuardCost_both (M : Matroid α) (hE : M.E = Set.univ) (κ : ℕ)
+    (D C : ℕ → Set α) (h : ℕ) :
+    ownGuardCost M hE κ D C h 0 + ownGuardCost M hE κ D C h 1 ≤ (C h).ncard :=
+  ownGuards_both_parities M hE κ D C h (activation h)
+
+/-- Own guards are charged only at the layer bases they enter. -/
+theorem testRankStatistic_le_final_cost_own
+    {α : Type u_1} [Fintype α] [DecidableEq α] (M : Matroid α) (hE : M.E = Set.univ)
+    (κ : ℕ) (hκ : 0 < κ) (D C T : ℕ → Set α) (h later : ℕ)
+    (U O test : Set α) (ε : Fin 2) :
+    κ * testRankStatistic M hE κ D C T h U O test ε ≤
+      κ * finalRankStatistic M hE κ D C T h (h+1+later) U O test ε +
+        κ * ownGuardCost M hE κ D C h ε +
+          ∑ j ∈ range later, (κ * (C (h+1+j)).ncard + (D (h+1+j)).ncard) := by
+  let S : ℤ → Set α := fun b => unobservedBirthRegion M hE κ D C U O h b ∩ test
+  have hc := actual_path_rank_cost_own M hE κ hκ D C T h later
+    (parityPoints (activation h) ε) (activation h-4) 1
+    (by dsimp [activation]; omega)
+    (by intro b hb; have := (mem_parityPoints _ _ _).mp hb; omega)
+    (by intro b hb; exact ((mem_parityPoints _ _ _).mp hb).2.1)
+    (by
+      intro b hb c hc hbc
+      have hbm := ((mem_parityPoints _ _ _).mp hb).2.2
+      have hcm := ((mem_parityPoints _ _ _).mp hc).2.2
+      omega)
+    S (fun b e he => unobservedBirthRegion_subset M hE κ D C U O h b he.1)
+  rw [sum_parityPoints, sum_parityPoints] at hc
+  rw [ownGuardCost]
+  have hS (b : ParityWindow (activation h) ε) : S b.val.val =
+      (nominalLayerSet M hE κ D C h U ε b \ O) ∩ test := by
+    dsimp [S]
+    rw [unobservedBirthRegion_eq_nominalLayer M hE κ D C h U O ε b]
+  simp_rw [hS] at hc
+  exact hc
+
+/-- `expected_nominal_to_final` with the own-guard cost restricted to layer bases. -/
+theorem expected_nominal_to_final_own (M : Matroid α) (hE : M.E = Set.univ)
+    (κ : ℕ) (hκ : 0 < κ) (D C : ℕ → Set α) (G : ℕ → Finset α)
+    (hG : Pairwise (fun i j => Disjoint (G i) (G j)))
+    (h later : ℕ) (O : Set α) (ε : Fin 2) (t : ℝ) (ht0 : 0 ≤ t) (ht1 : t ≤ 1) :
+    (κ:ℝ) * t * bitsExpectation (fun _ : α => t) univ (fun T =>
+      (nominalRankStatistic M hE κ D C (fun j => (T : Set α) ∩ (G j : Set α)) h (G h) O ε : ℝ)) ≤
+    (κ:ℝ) * bitsExpectation (fun _ : α => t) univ (fun T =>
+      (finalRankStatistic M hE κ D C (fun j => (T : Set α) ∩ (G j : Set α)) h
+        (h+1+later) (G h) O (T : Set α) ε : ℝ)) +
+      t * (κ * ownGuardCost M hE κ D C h ε + ∑ j ∈ range later,
+        (κ * (C (h+1+j)).ncard + (D (h+1+j)).ncard) : ℕ) := by
+  have ht := thinning_finalRankStatistic M hE κ D C G hG h (h+1+later) O ε t ht0 ht1
+  have hp (T : Finset α) :
+      (κ:ℝ) * (nominalRankStatistic M hE κ D C (fun j => (T : Set α) ∩ (G j : Set α))
+        h (G h) O ε : ℝ) ≤
+      (κ:ℝ) * (finalRankStatistic M hE κ D C (fun j => (T : Set α) ∩ (G j : Set α))
+        h (h+1+later) (G h) O Set.univ ε : ℝ) +
+        (κ * ownGuardCost M hE κ D C h ε + ∑ j ∈ range later,
+          (κ * (C (h+1+j)).ncard + (D (h+1+j)).ncard) : ℕ) := by
+    have hn := testRankStatistic_le_final_cost_own M hE κ hκ D C
       (fun j => (T : Set α) ∩ (G j : Set α)) h later (G h) O Set.univ ε
     have htest : testRankStatistic M hE κ D C (fun j => (T : Set α) ∩ (G j : Set α))
         h (G h) O Set.univ ε = nominalRankStatistic M hE κ D C

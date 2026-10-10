@@ -41,13 +41,13 @@ lemma pathGroups_disjoint (M : Matroid (Fin n)) (d : MainMasks n)
 
 noncomputable def listedLambda (M : Matroid (Fin n)) (hE : M.E = Set.univ)
     (d : MainMasks n) (w : Fin n → Option ℤ) (h : ℕ) : ℕ :=
-  finalRankStatistic M hE (2^100) (groupMask M d w d.D) (groupMask M d w d.C)
+  finalRankStatistic M hE ruleKappa (groupMask M d w d.D) (groupMask M d w d.C)
     (groupMask M d w d.T) h (groups M d w).length (groupMask M d w univ h)
     ((d.H ∪ d.D ∪ d.C : Finset (Fin n)) : Set (Fin n)) (d.T : Set (Fin n)) (boolParity d.odd)
 
 noncomputable def listedZ (M : Matroid (Fin n)) (hE : M.E = Set.univ)
     (d : MainMasks n) (w : Fin n → Option ℤ) (h : ℕ) : ℕ :=
-  nominalRankStatistic M hE (2^100) (groupMask M d w d.D) (groupMask M d w d.C)
+  nominalRankStatistic M hE ruleKappa (groupMask M d w d.D) (groupMask M d w d.C)
     (groupMask M d w d.T) h (groupMask M d w univ h)
     ((d.H ∪ d.D ∪ d.C : Finset (Fin n)) : Set (Fin n)) (boolParity d.odd)
 
@@ -75,10 +75,10 @@ theorem listedLambda_le_count (M : Matroid (Fin n)) (hE : M.E = Set.univ)
   rw [sum_parityPoints] at hc
   have hreg (b : ParityWindow (activation h) (boolParity d.odd)) :
       groupBirthRegion M hE d w h b.val.val =
-        nominalLayerSet M hE (2^100) (groupMask M d w d.D) (groupMask M d w d.C)
+        nominalLayerSet M hE ruleKappa (groupMask M d w d.D) (groupMask M d w d.C)
           h (groupMask M d w univ h) (boolParity d.odd) b \
           ((d.H ∪ d.D ∪ d.C : Finset (Fin n)) : Set (Fin n)) :=
-    unobservedBirthRegion_eq_nominalLayer M hE (2^100) _ _ h _ _ _ b
+    unobservedBirthRegion_eq_nominalLayer M hE ruleKappa _ _ h _ _ _ b
   simp_rw [hreg] at hc
   exact hc
 

@@ -1,79 +1,56 @@
 import OAI.Probability.MatroidProphet.Residual.MaskUnion
+import OAI.Probability.MatroidProphet.Pivots.Entropy
+import Mathlib.Analysis.Complex.ExponentialBounds
 
 namespace OAI
 
 namespace MatroidProphet
-open Finset
+open Finset Pivots
 variable {α : Type*} [DecidableEq α]
 
-lemma residualDelta_nonneg : 0 ≤ residualDelta := by unfold residualDelta; positivity
+lemma log_three_le : Real.log 3 ≤ 65 / 41 * Real.log 2 := by
+  have h : Real.log ((3 : ℝ) ^ 41) ≤ Real.log ((2 : ℝ) ^ 65) :=
+    Real.log_le_log (by positivity) (by norm_num)
+  rw [Real.log_pow, Real.log_pow] at h
+  push_cast at h
+  linarith
 
-lemma bitsExpectation_residualBad_delta (q : α → ℝ)
+/-- The residual exponent at `κ = ruleKappa` is charged `10 log 2` by the threshold
+`residualDelta` at every analyzed group size. -/
+lemma residual_tail_coefficient (N : ℝ) (hN : densityThreshold ≤ N) :
+    (residualExponent ruleKappa - residualDelta * Real.log 2) * N ≤ -(10 * Real.log 2) := by
+  rw [residualExponent_charge]
+  have hlog := Real.log_two_gt_d9
+  have h3 := log_three_le
+  have hcoef : (5 + 5 * Real.log 3 + 49 * Real.log 2) / 1536 - residualDelta * Real.log 2 ≤
+      (5 - 1602 / 41 * Real.log 2) / 1536 := by
+    unfold residualDelta; linarith
+  have hneg : (5 - 1602 / 41 * Real.log 2) / 1536 ≤ 0 := by nlinarith
+  have hN' : (1536 : ℝ) ≤ N := by simpa [densityThreshold, ruleKappa] using hN
+  have hm := mul_le_mul_of_nonpos_left hN' hneg
+  have hN0 : 0 ≤ N := by linarith
+  nlinarith [mul_le_mul_of_nonneg_right hcoef hN0]
+
+/-- Union-bound tail for the sharp parameters. -/
+theorem bitsExpectation_residualBad_tail (q : α → ℝ)
     (hq0 : ∀ e, 0 ≤ q e) (hqhalf : ∀ e, q e ≤ 1 / 2)
     (V : Finset α) (F : Finset (Finset α)) (hF : ∀ R ∈ F, R ⊆ V)
-    (hcard : (F.card : ℝ) ≤ Real.exp (1000 * Real.log densityThreshold / densityThreshold * V.card))
+    (hcard : (F.card : ℝ) ≤ Real.exp (residualExponent ruleKappa * V.card))
     (hn : densityThreshold ≤ (V.card : ℝ)) :
-    bitsExpectation q V (residualBadIndicator F (residualDelta * V.card)) ≤ residualDelta := by
+    bitsExpectation q V (residualBadIndicator F (residualDelta * V.card)) ≤ residualTail := by
   have htail := bitsExpectation_residualBad_le q hq0 hqhalf V F hF (residualDelta * V.card)
   have hmul := mul_le_mul_of_nonneg_right hcard
     (Real.exp_nonneg (-(residualDelta * V.card) * Real.log 2))
   apply htail.trans (hmul.trans ?_)
   rw [← Real.exp_add]
-  convert residual_tail_constant (V.card : ℝ) hn using 1
-  congr 1
-  ring
-
-lemma capturedResidual_le
-    {α : Type u_1} [DecidableEq α] (V S R : Finset α) (F : Finset (Finset α))
-    (hS : S ⊆ V) (hR : R ∈ F) (hRS : R ⊆ S) :
-    (R.card : ℝ) ≤ residualDelta * V.card +
-      (V.card : ℝ) * residualBadIndicator F (residualDelta * V.card) S := by
-  classical
-  have hcard : (R.card : ℝ) ≤ V.card := by exact_mod_cast Finset.card_le_card (hRS.trans hS)
-  have hδ : 0 ≤ residualDelta * (V.card : ℝ) := mul_nonneg residualDelta_nonneg (Nat.cast_nonneg _)
-  by_cases hsmall : (R.card : ℝ) ≤ residualDelta * V.card
-  · have hind : 0 ≤ residualBadIndicator F (residualDelta * V.card) S := by
-      unfold residualBadIndicator
-      split_ifs <;> norm_num
-    nlinarith [mul_nonneg (Nat.cast_nonneg V.card) hind]
-  · have hbad : residualBad F (residualDelta * V.card) S := ⟨R, hR, lt_of_not_ge hsmall, hRS⟩
-    simp only [residualBadIndicator, hbad, ite_true, mul_one]
-    linarith
-
-lemma tripleMask_residual_error_le
-    (p q r : α → ℝ) (hp0 : ∀ e, 0 ≤ p e) (hp1 : ∀ e, p e ≤ 1)
-    (hq0 : ∀ e, 0 ≤ q e) (hq1 : ∀ e, q e ≤ 1)
-    (hr0 : ∀ e, 0 ≤ r e) (hr1 : ∀ e, r e ≤ 1)
-    (hpq : ∀ e, p e + (1 - p e) * q e ≤ 1 / 2)
-    (V : Finset α) (F : Finset (Finset α)) (hF : ∀ R ∈ F, R ⊆ V)
-    (hcard : (F.card : ℝ) ≤ Real.exp (1000 * Real.log densityThreshold / densityThreshold * V.card))
-    (hn : densityThreshold ≤ (V.card : ℝ))
-    (error : Finset α → Finset α → Finset α → ℝ)
-    (herror : ∀ D ⊆ V, ∀ C ⊆ V, ∀ T ⊆ V,
-      error D C T ≤ residualDelta * V.card + (V.card : ℝ) *
-        residualBadIndicator F (residualDelta * V.card) (D ∪ C)) :
-    bitsExpectation p V (fun D => bitsExpectation q V (fun C => bitsExpectation r V (error D C))) ≤
-      2 * residualDelta * V.card := by
-  have hpq0 : ∀ e, 0 ≤ p e + (1 - p e) * q e := by
-    intro e
-    exact add_nonneg (hp0 e) (mul_nonneg (sub_nonneg.mpr (hp1 e)) (hq0 e))
-  have hbad := bitsExpectation_residualBad_delta (fun e => p e + (1 - p e) * q e)
-    hpq0 hpq V F hF hcard hn
+  have hexp := residual_tail_coefficient _ hn
   calc
-    _ ≤ bitsExpectation p V (fun D => bitsExpectation q V (fun C => bitsExpectation r V (fun _T =>
-          residualDelta * V.card + (V.card : ℝ) * residualBadIndicator F (residualDelta * V.card) (D ∪ C)))) := by
-      apply bitsExpectation_mono p hp0 hp1
-      intro D hD
-      apply bitsExpectation_mono q hq0 hq1
-      intro C hC
-      exact bitsExpectation_mono r hr0 hr1 V (fun T hT => herror D hD C hC T hT)
-    _ = residualDelta * V.card + (V.card : ℝ) * bitsExpectation
-        (fun e => p e + (1 - p e) * q e) V (residualBadIndicator F (residualDelta * V.card)) := by
-      simp_rw [bitsExpectation_const, bitsExpectation_add, bitsExpectation_mul_const, bitsExpectation_const]
-      rw [bitsExpectation_union]
-    _ ≤ residualDelta * V.card + (V.card : ℝ) * residualDelta :=
-      add_le_add le_rfl (mul_le_mul_of_nonneg_left hbad (Nat.cast_nonneg V.card))
-    _ = _ := by ring
+    Real.exp (residualExponent ruleKappa * V.card + -(residualDelta * V.card) * Real.log 2)
+        ≤ Real.exp (-(10 * Real.log 2)) := Real.exp_le_exp.mpr (by linarith)
+    _ = residualTail := by
+        rw [Real.exp_neg, show (10 : ℝ) * Real.log 2 = ((10 : ℕ) : ℝ) * Real.log 2 by norm_num,
+          Real.exp_nat_mul, Real.exp_log (by norm_num)]
+        norm_num [residualTail]
 
 end MatroidProphet
 

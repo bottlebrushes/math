@@ -112,18 +112,80 @@ lemma card_residualFamily_le (M : Matroid α) (d : α) (U : Finset α) (q : ℕ)
       _ = C.card ^ 2 * B ^ 2 := by simp [pow_two, Nat.mul_assoc]
   exact hsum.trans (Nat.mul_le_mul_right (B ^ 2) (Nat.pow_le_pow_left (card_smallSubsets_le U q) 2))
 
+/-- The sharpened residual-family count: the first marked sequence has only the J moves. -/
+lemma card_residualFamily_le_sharp (M : Matroid α) (d : α) (U : Finset α) (q : ℕ)
+    (old₁ : O₁ → α) (old₂ : O₂ → α) (mark₁ : O₁ → Bool) (mark₂ : O₂ → Bool)
+    (test : Fin n → α) (hU : (U : Set α) ⊆ M.E)
+    (h₁ : ∀ o, old₁ o ∈ M.E) (h₂ : ∀ o, old₂ o ∈ M.E) :
+    (residualFamily M U q old₁ old₂ mark₁ mark₂ test).card ≤
+      binomialSum U.card q ^ 2 * (4 ^ q * binomialSum n q) *
+        (4 ^ (2 * q) * binomialSum n (2 * q)) := by
+  classical
+  let C := smallSubsets U q
+  let B₁ := 4 ^ q * binomialSum n q
+  let B₂ := 4 ^ (2 * q) * binomialSum n (2 * q)
+  have hpair (J : Finset α) (hJ : J ∈ C) (Z : Finset α) (hZ : Z ∈ C) :
+      (intersectionFamily
+        (freeMarkedPatterns M old₁ (fun a : J => a.val) test mark₁)
+        (freeMarkedPatterns M old₂ (Sum.elim (fun a : J => a.val) (fun a : Z => a.val)) test mark₂)).card
+        ≤ B₁ * B₂ := by
+    obtain ⟨hJU, hJq⟩ := (mem_smallSubsets U J q).1 hJ
+    obtain ⟨hZU, hZq⟩ := (mem_smallSubsets U Z q).1 hZ
+    have hfirst : (freeMarkedPatterns M old₁ (fun a : J => a.val) test mark₁).card ≤ B₁ := by
+      apply card_freeMarkedPatterns_le M d old₁ (fun a : J => a.val) test mark₁ q
+      · simpa using hJq
+      · intro o
+        cases o with
+        | inl o => exact h₁ o
+        | inr a => exact hU (hJU a.property)
+    have hsecond : (freeMarkedPatterns M old₂
+        (Sum.elim (fun a : J => a.val) (fun a : Z => a.val)) test mark₂).card ≤ B₂ := by
+      apply card_freeMarkedPatterns_le M d old₂
+        (Sum.elim (fun a : J => a.val) (fun a : Z => a.val)) test mark₂ (2 * q)
+      · simpa using (show J.card + Z.card ≤ 2 * q by omega)
+      · intro o
+        cases o with
+        | inl o => exact h₂ o
+        | inr a =>
+          cases a with
+          | inl a => exact hU (hJU a.property)
+          | inr a => exact hU (hZU a.property)
+    exact (card_intersectionFamily_le _ _).trans
+      (Nat.mul_le_mul hfirst hsecond)
+  have hsum : (residualFamily M U q old₁ old₂ mark₁ mark₂ test).card ≤
+      C.card ^ 2 * (B₁ * B₂) := by
+    calc
+      _ ≤ ∑ J ∈ C, ((C.biUnion fun Z => intersectionFamily
+          (freeMarkedPatterns M old₁ (fun a : J => a.val) test mark₁)
+          (freeMarkedPatterns M old₂ (Sum.elim (fun a : J => a.val) (fun a : Z => a.val)) test mark₂))).card :=
+        card_biUnion_le
+      _ ≤ ∑ J ∈ C, ∑ Z ∈ C, (intersectionFamily
+          (freeMarkedPatterns M old₁ (fun a : J => a.val) test mark₁)
+          (freeMarkedPatterns M old₂ (Sum.elim (fun a : J => a.val) (fun a : Z => a.val)) test mark₂)).card :=
+        sum_le_sum fun _ _ => card_biUnion_le
+      _ ≤ ∑ _J ∈ C, ∑ _Z ∈ C, (B₁ * B₂) :=
+        sum_le_sum fun J hJ => sum_le_sum fun Z hZ => hpair J hJ Z hZ
+      _ = C.card ^ 2 * (B₁ * B₂) := by simp [pow_two, Nat.mul_assoc]
+  calc
+    _ ≤ C.card ^ 2 * (B₁ * B₂) := hsum
+    _ ≤ binomialSum U.card q ^ 2 * (B₁ * B₂) := by
+      exact Nat.mul_le_mul_right _ (Nat.pow_le_pow_left (card_smallSubsets_le U q) 2)
+    _ = _ := by simp [B₁, B₂, Nat.mul_assoc, Nat.mul_left_comm, Nat.mul_comm]
+
+
 lemma card_residualFamily_le_exp (M : Matroid α) (d : α) (U : Finset α) (q : ℕ)
     (old₁ : O₁ → α) (old₂ : O₂ → α) (mark₁ : O₁ → Bool) (mark₂ : O₂ → Bool)
     (test : Fin n → α) (hU : (U : Set α) ⊆ M.E)
     (h₁ : ∀ o, old₁ o ∈ M.E) (h₂ : ∀ o, old₂ o ∈ M.E)
     (hn : U.card = n) (κ : ℝ) (hκ : 2 ≤ κ) (hq : (q : ℝ) ≤ (n : ℝ) / κ) :
     ((residualFamily M U q old₁ old₂ mark₁ mark₂ test).card : ℝ) ≤
-      Real.exp (1000 * Real.log κ / κ * n) := by
-  have h := card_residualFamily_le M d U q old₁ old₂ mark₁ mark₂ test hU h₁ h₂
+      Real.exp (residualExponent κ * n) := by
+  have h := card_residualFamily_le_sharp M d U q old₁ old₂ mark₁ mark₂ test hU h₁ h₂
   rw [hn] at h
   exact (show ((residualFamily M U q old₁ old₂ mark₁ mark₂ test).card : ℝ) ≤
-      (((binomialSum n q)^2 * (4^(2*q) * binomialSum n (2*q))^2 : ℕ) : ℝ) by exact_mod_cast h).trans
-    (residual_raw_count_le_exp n q κ hκ hq)
+      (((binomialSum n q) ^ 2 * (4 ^ q * binomialSum n q) *
+        (4 ^ (2 * q) * binomialSum n (2 * q)) : ℕ) : ℝ) by exact_mod_cast h).trans
+    (residual_sharp_product_le_exp n q κ hκ hq)
 
 end MatroidProphet.Pivots
 

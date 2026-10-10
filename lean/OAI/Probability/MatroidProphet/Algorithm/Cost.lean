@@ -66,7 +66,7 @@ theorem listed_cost_le_true_counts (M : Matroid (Fin n)) (d : MainMasks n)
           (groupMask M d w d.D (h+1+j)).ncard) ≤
     κ * (d.C ∩ ((candidateLabels M w d.H).filter (fun e => w e = some i))).card +
       κ * (d.C ∩ ((candidateLabels M w d.H).filter (fun e => ∃ k, w e = some k ∧ i < k))).card +
-        ((candidateLabels M w d.H).filter (fun e => ∃ k, w e = some k ∧ i < k)).card := by
+        (d.D ∩ (candidateLabels M w d.H).filter (fun e => ∃ k, w e = some k ∧ i < k)).card := by
   classical
   let J := range ((groups M d w).length-(h+1))
   let high := (candidateLabels M w d.H).filter (fun e => ∃ k, w e = some k ∧ i < k)
@@ -75,16 +75,40 @@ theorem listed_cost_le_true_counts (M : Matroid (Fin n)) (d : MainMasks n)
     apply sum_groupMask_card_le M d w J (fun j => h+1+j) (by intro a _ b _ hab; change h+1+a = h+1+b at hab; omega)
     intro j hj
     exact groupMask_later_subset M d w d.C hi (by have := mem_range.mp hj; omega) (by omega)
-  have hd : (∑ j ∈ J, (groupMask M d w d.D (h+1+j)).ncard) ≤ high.card := by
+  have hd : (∑ j ∈ J, (groupMask M d w d.D (h+1+j)).ncard) ≤ (d.D ∩ high).card := by
     apply sum_groupMask_card_le M d w J (fun j => h+1+j) (by intro a _ b _ hab; change h+1+a = h+1+b at hab; omega)
-    intro j hj e he
-    have hm := groupMask_later_subset M d w d.D hi
-      (by have := mem_range.mp hj; omega) (by omega) he
-    exact (Finset.mem_inter.mp hm).2
+    intro j hj
+    exact groupMask_later_subset M d w d.D hi (by have := mem_range.mp hj; omega) (by omega)
   have hf : (groupMask M d w d.C h).ncard =
       (d.C ∩ ((candidateLabels M w d.H).filter (fun e => w e = some i))).card := by
     rw [Set.ncard_eq_toFinset_card', groupMask_eq_focal M d w d.C hi]
   rw [hf, sum_add_distrib, ← mul_sum]
+  have hm := Nat.mul_le_mul_left κ hc
+  change _ ≤ _ at hd
+  dsimp [J, high] at hm hd
+  omega
+
+/-- The later groups' part of the listed cost. -/
+theorem listed_later_cost_le_true_counts (M : Matroid (Fin n)) (d : MainMasks n)
+    (w : Fin n → Option ℤ) {h : ℕ} {i : ℤ} (hi : (groups M d w)[h]? = some i) (κ : ℕ) :
+      ∑ j ∈ range ((groups M d w).length-(h+1)),
+        (κ * (groupMask M d w d.C (h+1+j)).ncard +
+          (groupMask M d w d.D (h+1+j)).ncard) ≤
+      κ * (d.C ∩ ((candidateLabels M w d.H).filter (fun e => ∃ k, w e = some k ∧ i < k))).card +
+        (d.D ∩ (candidateLabels M w d.H).filter (fun e => ∃ k, w e = some k ∧ i < k)).card := by
+  classical
+  let J := range ((groups M d w).length-(h+1))
+  let high := (candidateLabels M w d.H).filter (fun e => ∃ k, w e = some k ∧ i < k)
+  have hh := (List.getElem?_eq_some_iff.mp hi).1
+  have hc : (∑ j ∈ J, (groupMask M d w d.C (h+1+j)).ncard) ≤ (d.C ∩ high).card := by
+    apply sum_groupMask_card_le M d w J (fun j => h+1+j) (by intro a _ b _ hab; change h+1+a = h+1+b at hab; omega)
+    intro j hj
+    exact groupMask_later_subset M d w d.C hi (by have := mem_range.mp hj; omega) (by omega)
+  have hd : (∑ j ∈ J, (groupMask M d w d.D (h+1+j)).ncard) ≤ (d.D ∩ high).card := by
+    apply sum_groupMask_card_le M d w J (fun j => h+1+j) (by intro a _ b _ hab; change h+1+a = h+1+b at hab; omega)
+    intro j hj
+    exact groupMask_later_subset M d w d.D hi (by have := mem_range.mp hj; omega) (by omega)
+  rw [sum_add_distrib, ← mul_sum]
   have hm := Nat.mul_le_mul_left κ hc
   change _ ≤ _ at hd
   dsimp [J, high] at hm hd

@@ -96,7 +96,7 @@ lemma bitsWeight_pos_of_interior (q : α → ℝ) (V A : Finset α)
   · exact sub_pos.mpr (hq1 e he)
 
 /-- Constant interior-rate specialization: no nonnull-fiber premise remains.
-This applies in particular to the source's `t = 2⁻¹⁴⁰`. -/
+This applies in particular to the source's thinning rate `t = 2⁻¹⁹`. -/
 theorem bitsExpectation_condition_on_outside_const
     (t : ℝ) (ht0 : 0 < t) (ht1 : t < 1)
     (V G A : Finset α) (hG : G ⊆ V) (hA : A ⊆ V \ G)

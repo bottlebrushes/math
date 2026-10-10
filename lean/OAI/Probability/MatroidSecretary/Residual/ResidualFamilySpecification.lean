@@ -7,7 +7,8 @@ namespace MatroidProphet
 open Set Finset Pivots MainAlgorithm
 
 /-- Source `lem:pattern-family`, with its fixed-before-focal-bits quantifiers.
-The source uses κ=2^100; this statement also covers every κ≥2. -/
+The sharpened rule uses κ = ruleKappa; this statement covers every κ ≥ 2, with the
+sharpened family exponent `Pivots.residualExponent κ`. -/
 def PatternFamilyClaim : Prop :=
   ∀ {n : ℕ}
     (M : Matroid (Fin n)) (hE : M.E = Set.univ) (κ : ℕ) (_hκ : 2 ≤ κ)
@@ -16,7 +17,7 @@ def PatternFamilyClaim : Prop :=
     ∃ family : Finset (Finset (Fin n)),
       (∀ R ∈ family, R ⊆ trueGroup M d s i) ∧
       (family.card : ℝ) ≤ Real.exp
-        (1000 * Real.log (κ : ℝ) / (κ : ℝ) * (trueGroup M d s i).card) ∧
+        (Pivots.residualExponent (κ : ℝ) * (trueGroup M d s i).card) ∧
       ∀ (A B C : Finset (Fin n)),
         A ⊆ trueGroup M d s i → B ⊆ trueGroup M d s i →
         C ⊆ trueGroup M d s i → A.Nonempty →

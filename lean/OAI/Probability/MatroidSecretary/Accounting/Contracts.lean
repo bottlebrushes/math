@@ -100,7 +100,7 @@ theorem all_orders {n : ℕ} (M : Matroid (Fin n)) (hE : M.E = Set.univ)
       ((selection M hE d w π).filter (fun e =>
         ∃ i, w e = some i ∧ h ≤ (groups M d w).idxOf i)).card) ∧
     (∀ A : Finset (Fin n), Disjoint A (pathGroups M d w h) →
-      thinningRate * (finalRankStatistic M hE (2^100)
+      thinningRate * (finalRankStatistic M hE ruleKappa
         (groupMask M d w d.D) (groupMask M d w d.C)
         (fun j => (A : Set (Fin n)) ∩ (pathGroups M d w j : Set (Fin n)))
         h (groups M d w).length (pathGroups M d w h)
@@ -112,7 +112,7 @@ theorem all_orders {n : ℕ} (M : Matroid (Fin n)) (hE : M.E = Set.univ)
   refine ⟨fun π => listedLambda_le_count M hE d w π h, ?_⟩
   intro A hA
   simp only [listedLambda_update_T]
-  exact thinning_final_fixed_outside M hE (2^100)
+  exact thinning_final_fixed_outside M hE ruleKappa
     (groupMask M d w d.D) (groupMask M d w d.C) (pathGroups M d w)
     (pathGroups_disjoint M d w) h (groups M d w).length
     ((d.H ∪ d.D ∪ d.C : Finset (Fin n)) : Set (Fin n)) (boolParity d.odd)
@@ -125,7 +125,7 @@ theorem rank_cost {n : ℕ} (M : Matroid (Fin n)) (hE : M.E = Set.univ)
     (d : MainMasks n) (w : Fin n → Option ℤ) (h : ℕ)
     (hh : h < (groups M d w).length) :
     (listedZ M hE d w h : ℝ) ≤
-      (finalRankStatistic M hE (2^100) (groupMask M d w d.D)
+      (finalRankStatistic M hE ruleKappa (groupMask M d w d.D)
         (groupMask M d w d.C) (groupMask M d w d.T) h (groups M d w).length
         (groupMask M d w univ h)
         ((d.H ∪ d.D ∪ d.C : Finset (Fin n)) : Set (Fin n)) Set.univ
@@ -133,7 +133,7 @@ theorem rank_cost {n : ℕ} (M : Matroid (Fin n)) (hE : M.E = Set.univ)
       ∑ j ∈ range ((groups M d w).length-(h+1)),
         ((groupMask M d w d.C (h+1+j)).ncard +
           (groupMask M d w d.D (h+1+j)).ncard / densityThreshold) := by
-  have hc := nominal_rank_le_final_add_cost M hE (2^100) (by positivity)
+  have hc := nominal_rank_le_final_add_cost M hE ruleKappa ruleKappa_pos
     (groupMask M d w d.D) (groupMask M d w d.C) (groupMask M d w d.T)
     h ((groups M d w).length-(h+1)) (groupMask M d w univ h)
     ((d.H ∪ d.D ∪ d.C : Finset (Fin n)) : Set (Fin n)) (boolParity d.odd)

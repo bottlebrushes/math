@@ -102,9 +102,9 @@ lemma expectation_not_mem (q : Fin n → ℝ) (V : Finset (Fin n))
       rw [bitsExpectation_insert q _ e (by simp), hno, hyes]
       ring
 
-lemma expectation_sdiff_fair (V I : Finset (Fin n)) (hIV : I ⊆ V) (w : Weights n) :
-    bitsExpectation (fun _ => (1 / 2 : ℝ)) V (fun H => ∑ e ∈ I \ H, w e) =
-      (∑ e ∈ I, w e) / 2 := by
+lemma expectation_sdiff_rate (p : ℝ) (V I : Finset (Fin n)) (hIV : I ⊆ V) (w : Weights n) :
+    bitsExpectation (fun _ => p) V (fun H => ∑ e ∈ I \ H, w e) =
+      (1 - p) * ∑ e ∈ I, w e := by
   classical
   have hsum (H : Finset (Fin n)) :
       (∑ e ∈ I \ H, w e) = ∑ e ∈ I, if e ∉ H then w e else 0 := by
@@ -112,15 +112,14 @@ lemma expectation_sdiff_fair (V I : Finset (Fin n)) (hIV : I ⊆ V) (w : Weights
   simp_rw [hsum]
   rw [expectation_sum]
   calc
-    (∑ e ∈ I, bitsExpectation (fun _ => (1 / 2 : ℝ)) V
+    (∑ e ∈ I, bitsExpectation (fun _ => p) V
         (fun H => if e ∉ H then w e else 0)) =
-        ∑ e ∈ I, (1 - (1 / 2 : ℝ)) * w e := by
+        ∑ e ∈ I, (1 - p) * w e := by
       apply Finset.sum_congr rfl
       intro e he
       exact expectation_not_mem _ V e (hIV he) (w e)
-    _ = (∑ e ∈ I, w e) / 2 := by
+    _ = (1 - p) * ∑ e ∈ I, w e := by
       rw [← Finset.mul_sum]
-      ring
 
 lemma greedy_sdiff_indep (M : Matroid (Fin n)) (time : Fin n → ℕ)
     (ht : Function.Injective time) (V H : Finset (Fin n))
@@ -130,22 +129,14 @@ lemma greedy_sdiff_indep (M : Matroid (Fin n)) (time : Fin n → ℕ)
   intro e he
   exact he.1
 
-lemma expectation_greedy_sdiff_fair (M : Matroid (Fin n)) (time : Fin n → ℕ)
-    (V : Finset (Fin n)) (w : Weights n) :
-    bitsExpectation (fun _ => (1 / 2 : ℝ)) V (fun H => ∑ e ∈ greedy M time V \ H, w e) =
-      (∑ e ∈ greedy M time V, w e) / 2 := by
-  classical
-  apply expectation_sdiff_fair
-  exact Finset.filter_subset _ _
-
-lemma expectation_fair_balance (V : Finset (Fin n)) (e : Fin n) (he : e ∈ V)
+lemma expectation_rate_balance (r : ℝ) (V : Finset (Fin n)) (e : Fin n) (he : e ∈ V)
     (p : Finset (Fin n) → Prop) [DecidablePred p] (hp : ∀ H, p (insert e H) ↔ p H) (c : ℝ) :
-    bitsExpectation (fun _ => (1 / 2 : ℝ)) V
+    r * bitsExpectation (fun _ => r) V
         (fun H => if e ∈ H then 0 else if p H then c else 0) =
-      bitsExpectation (fun _ => (1 / 2 : ℝ)) V
+      (1 - r) * bitsExpectation (fun _ => r) V
         (fun H => if e ∈ H then (if p H then c else 0) else 0) := by
   classical
-  let q : Fin n → ℝ := fun _ => 1 / 2
+  let q : Fin n → ℝ := fun _ => r
   let f : Finset (Fin n) → ℝ := fun H => if p H then c else 0
   have heH : ∀ H ⊆ V.erase e, e ∉ H := by
     intro H hH he'
@@ -174,7 +165,7 @@ lemma expectation_fair_balance (V : Finset (Fin n)) (e : Fin n) (he : e ∈ V)
     apply bitsExpectation_congr
     intro H _
     simp [hp H, f]
-  change bitsExpectation q V _ = bitsExpectation q V _
+  change r * bitsExpectation q V _ = (1 - r) * bitsExpectation q V _
   conv_lhs => rw [← Finset.insert_erase he]
   conv_rhs => rw [← Finset.insert_erase he]
   rw [bitsExpectation_insert q _ e (by simp),
@@ -182,11 +173,11 @@ lemma expectation_fair_balance (V : Finset (Fin n)) (e : Fin n) (he : e ∈ V)
   dsimp [q]
   ring
 
-lemma expectation_candidates_eq_greedy (M : Matroid (Fin n)) (time : Fin n → ℕ)
+lemma expectation_candidates_eq_greedy (r : ℝ) (M : Matroid (Fin n)) (time : Fin n → ℕ)
     (V : Finset (Fin n)) (w : Weights n) :
-    bitsExpectation (fun _ => (1 / 2 : ℝ)) V
+    r * bitsExpectation (fun _ => r) V
         (fun H => ∑ e ∈ candidates M time V H, w e) =
-      bitsExpectation (fun _ => (1 / 2 : ℝ)) V
+      (1 - r) * bitsExpectation (fun _ => r) V
         (fun H => ∑ e ∈ greedy M time H, w e) := by
   classical
   let p : Fin n → Finset (Fin n) → Prop := fun e H => e ∉ M.closure (prior time H e)
@@ -210,37 +201,42 @@ lemma expectation_candidates_eq_greedy (M : Matroid (Fin n)) (time : Fin n → �
     intro e _
     by_cases he : e ∈ H <;> simp [he]
   calc
-    _ = bitsExpectation (fun _ => (1 / 2 : ℝ)) V
+    _ = r * bitsExpectation (fun _ => r) V
         (fun H => ∑ e ∈ V, if e ∈ H then 0 else if p e H then w e else 0) := by
+      congr 1
       apply bitsExpectation_congr
       intro H _
       exact hc H
-    _ = ∑ e ∈ V, bitsExpectation (fun _ => (1 / 2 : ℝ)) V
-        (fun H => if e ∈ H then 0 else if p e H then w e else 0) := expectation_sum _ _ _ _
-    _ = ∑ e ∈ V, bitsExpectation (fun _ => (1 / 2 : ℝ)) V
+    _ = ∑ e ∈ V, r * bitsExpectation (fun _ => r) V
+        (fun H => if e ∈ H then 0 else if p e H then w e else 0) := by
+      rw [expectation_sum, Finset.mul_sum]
+    _ = ∑ e ∈ V, (1 - r) * bitsExpectation (fun _ => r) V
         (fun H => if e ∈ H then (if p e H then w e else 0) else 0) := by
       apply Finset.sum_congr rfl
       intro e he
-      apply expectation_fair_balance V e he (p e) _ (w e)
+      apply expectation_rate_balance r V e he (p e) _ (w e)
       intro H
       simp [p, prior_insert_self]
-    _ = bitsExpectation (fun _ => (1 / 2 : ℝ)) V
-        (fun H => ∑ e ∈ V, if e ∈ H then (if p e H then w e else 0) else 0) :=
-      (expectation_sum _ _ _ _).symm
+    _ = (1 - r) * bitsExpectation (fun _ => r) V
+        (fun H => ∑ e ∈ V, if e ∈ H then (if p e H then w e else 0) else 0) := by
+      rw [expectation_sum, Finset.mul_sum]
     _ = _ := by
+      congr 1
       apply bitsExpectation_congr
       intro H hH
       exact (hg H hH).symm
 
-theorem expectation_candidates_le_optimum (M : Matroid (Fin n)) (time : Fin n → ℕ)
+theorem expectation_candidates_le_optimum (r : ℝ) (hr0 : 0 ≤ r) (hr1 : r ≤ 1)
+    (M : Matroid (Fin n)) (time : Fin n → ℕ)
     (ht : Function.Injective time) (V : Finset (Fin n))
     (hground : ∀ e ∈ V, e ∈ M.E) (w : Weights n) :
-    bitsExpectation (fun _ => (1 / 2 : ℝ)) V
-        (fun H => ∑ e ∈ candidates M time V H, w e) ≤ optimum M w := by
+    r * bitsExpectation (fun _ => r) V
+        (fun H => ∑ e ∈ candidates M time V H, w e) ≤ (1 - r) * optimum M w := by
   rw [expectation_candidates_eq_greedy]
+  apply mul_le_mul_of_nonneg_left _ (by linarith)
   calc
-    _ ≤ bitsExpectation (fun _ => (1 / 2 : ℝ)) V (fun _ => optimum M w) := by
-      apply bitsExpectation_mono _ (by intro e; norm_num) (by intro e; norm_num)
+    _ ≤ bitsExpectation (fun _ => r) V (fun _ => optimum M w) := by
+      apply bitsExpectation_mono _ (fun _ => hr0) (fun _ => hr1)
       intro H hH
       exact sum_le_optimum M w _ (greedy_indep M time ht H (fun e he => hground e (hH he)))
     _ = _ := bitsExpectation_const _ _ _

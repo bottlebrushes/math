@@ -15,11 +15,11 @@ lemma groupMask_function_eq_inter (M : Matroid (Fin n)) (d : MainMasks n)
 lemma listedZ_update_T (M : Matroid (Fin n)) (hE : M.E = Set.univ)
     (d : MainMasks n) (w : Fin n → Option ℤ) (h : ℕ) (T : Finset (Fin n)) :
     listedZ M hE {d with T := T} w h =
-      nominalRankStatistic M hE (2^100) (groupMask M d w d.D) (groupMask M d w d.C)
+      nominalRankStatistic M hE ruleKappa (groupMask M d w d.D) (groupMask M d w d.C)
         (fun j => (T : Set (Fin n)) ∩ (pathGroups M d w j : Set (Fin n))) h (pathGroups M d w h)
         ((d.H ∪ d.D ∪ d.C : Finset (Fin n)) : Set (Fin n)) (boolParity d.odd) := by
   unfold listedZ
-  change nominalRankStatistic M hE (2^100) (groupMask M d w d.D) (groupMask M d w d.C)
+  change nominalRankStatistic M hE ruleKappa (groupMask M d w d.D) (groupMask M d w d.C)
     (groupMask M d w T) h (groupMask M d w univ h)
       ((d.H ∪ d.D ∪ d.C : Finset (Fin n)) : Set (Fin n)) (boolParity d.odd) = _
   rw [groupMask_function_eq_inter M d w T, ← pathGroups_coe]
@@ -27,12 +27,12 @@ lemma listedZ_update_T (M : Matroid (Fin n)) (hE : M.E = Set.univ)
 lemma listedLambda_update_T (M : Matroid (Fin n)) (hE : M.E = Set.univ)
     (d : MainMasks n) (w : Fin n → Option ℤ) (h : ℕ) (T : Finset (Fin n)) :
     listedLambda M hE {d with T := T} w h =
-      finalRankStatistic M hE (2^100) (groupMask M d w d.D) (groupMask M d w d.C)
+      finalRankStatistic M hE ruleKappa (groupMask M d w d.D) (groupMask M d w d.C)
         (fun j => (T : Set (Fin n)) ∩ (pathGroups M d w j : Set (Fin n))) h (groups M d w).length
         (pathGroups M d w h) ((d.H ∪ d.D ∪ d.C : Finset (Fin n)) : Set (Fin n))
         (T : Set (Fin n)) (boolParity d.odd) := by
   unfold listedLambda
-  change finalRankStatistic M hE (2^100) (groupMask M d w d.D) (groupMask M d w d.C)
+  change finalRankStatistic M hE ruleKappa (groupMask M d w d.D) (groupMask M d w d.C)
     (groupMask M d w T) h (groups M d w).length (groupMask M d w univ h)
       ((d.H ∪ d.D ∪ d.C : Finset (Fin n)) : Set (Fin n)) (T : Set (Fin n)) (boolParity d.odd) = _
   rw [groupMask_function_eq_inter M d w T, ← pathGroups_coe]
@@ -44,11 +44,12 @@ theorem listed_expected_nominal_to_final (M : Matroid (Fin n)) (hE : M.E = Set.u
       (listedZ M hE {d with T := T} w h : ℝ)) ≤
     densityThreshold * bitsExpectation (fun _ : Fin n => t) univ (fun T =>
       (listedLambda M hE {d with T := T} w h : ℝ)) +
-      t * ((2^100) * (groupMask M d w d.C h).ncard +
+      t * (ruleKappa * ownGuardCost M hE ruleKappa (groupMask M d w d.D) (groupMask M d w d.C) h
+          (boolParity d.odd) +
         ∑ j ∈ range ((groups M d w).length-(h+1)),
-          ((2^100) * (groupMask M d w d.C (h+1+j)).ncard +
+          (ruleKappa * (groupMask M d w d.C (h+1+j)).ncard +
             (groupMask M d w d.D (h+1+j)).ncard) : ℕ) := by
-  have hc := expected_nominal_to_final M hE (2^100) (by positivity)
+  have hc := expected_nominal_to_final_own M hE ruleKappa ruleKappa_pos
     (groupMask M d w d.D) (groupMask M d w d.C) (pathGroups M d w)
     (pathGroups_disjoint M d w) h ((groups M d w).length-(h+1))
     ((d.H ∪ d.D ∪ d.C : Finset (Fin n)) : Set (Fin n)) (boolParity d.odd) t ht0 ht1

@@ -5,10 +5,10 @@ namespace OAI
 /-!
 # The stronger constant for the concrete one-sample rule
 
-The introduction explicitly records the stronger `2⁻²⁹³` constant proved in
-accounting.tex.  The root endpoint uses its announced `2⁻³¹⁰` constant.  This
-supporting theorem exposes the stronger claim for the actual constructed rule,
-without changing the endpoint or imposing moments on individual loop values.
+The sharpened analysis proves the constant `2⁻⁴⁶` for the mixed rule without the random
+rounding offset (`2⁻⁴¹` with it, see `sharp_hidden_guarantee`; the
+manuscript proves `2⁻²⁹³` and announces `2⁻³¹⁰`).  This supporting theorem exposes it
+for the actual constructed rule, without imposing moments on individual loop values.
 
 The rule and initial seed law below depend only on the known labeled matroid.
 The probability space, matching input laws, and full-seed-aware adversary are
@@ -46,11 +46,11 @@ theorem source_one_sample_strong {n : ℕ} (M : Matroid (Fin n))
     Integrable (fun ω =>
       reward (sampleSimulation (completeHiddenRule M hE))
         (R ω) (S ω) (V ω) (π ω)) μ ∧
-      ((2 : ℝ) ^ 293)⁻¹ * (∫ ω, optimum M (V ω) ∂μ) ≤
+      ((2 : ℝ) ^ 46)⁻¹ * (∫ ω, optimum M (V ω) ∂μ) ≤
         ∫ ω, reward (sampleSimulation (completeHiddenRule M hE))
           (R ω) (S ω) (V ω) (π ω) ∂μ :=
   oneSample_of_hidden M (completeHiddenRule M hE) (sourceSeedLaw n)
-    (((2 : ℝ) ^ 293)⁻¹) (completeHiddenRule_feasible M hE)
+    (((2 : ℝ) ^ 46)⁻¹) (completeHiddenRule_feasible M hE)
     (complete_hidden_guarantee M hE) μ S V R hS hV hR hSN hVN
     hi hlaw hseed hRlaw hopt π hπ
 

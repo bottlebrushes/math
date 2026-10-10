@@ -17,11 +17,13 @@ def tripleRevealed (x : MaskTriple) : Bool := x.1 || x.2.1 || x.2.2
 
 /-- The independent H,D,C law at one label, retaining the thinning parameter. -/
 noncomputable def tripleWeight (t : ℝ) (x : MaskTriple) : ℝ :=
-  (1 / 2) * (if x.2.1 then 1 / 4 else 3 / 4) *
+  (if x.1 then filterRate else 1 - filterRate) *
+    (if x.2.1 then densityRate else 1 - densityRate) *
     (if x.2.2 then t else 1 - t)
 
 /-- Probability that a label is sacrificed in the main branch. -/
-noncomputable def mainRevealRate : ℝ := 5 / 8 + 3 * thinningRate / 8
+noncomputable def mainRevealRate : ℝ :=
+  1 - (1 - filterRate) * (1 - densityRate) * (1 - thinningRate)
 
 /-- The source specifies all seven nonzero triple masses divided by the reveal rate.
 Outside the observation set the triple is deterministically zero. -/

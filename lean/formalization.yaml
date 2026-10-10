@@ -509,6 +509,11 @@ sources:
     id: ../preprints/Nonuniqueness-for-Bounded-Measurable-Scalar-Conductivities-in-Three-Dimensions-September-23-2026/paper.pdf
     type: article
 
+  - title: "One Sample Suffices for Matroid Prophet Inequalities against an Almighty Adversary"
+    authors: ["OpenAI"]
+    id: ../preprints/One-Sample-Suffices-for-Matroid-Prophet-Inequalities-against-an-Almighty-Adversary-September-23-2026/final.pdf
+    type: article
+
   - title: "Perfect completeness for 2-to-1 games"
     authors: ["OpenAI"]
     id: ../preprints/Perfect-completeness-for-2-to-1-games-September-23-2026/paper.pdf
@@ -1405,6 +1410,14 @@ status:
     - comparator_config: ComparatorChallenges/MatrixRemoval.json
       declaration: OAI.Problem348.no_polynomial_removal_bound
       file: OAI/Combinatorics/MatrixRemoval/Main.lean
+
+    - comparator_config: ComparatorChallenges/MatroidProphet.json
+      declaration: OAI.MatroidProphet.one_sample
+      file: OAI/Probability/MatroidProphet/Main.lean
+
+    - comparator_config: ComparatorChallenges/MatroidProphetSharp.json
+      declaration: OAI.MatroidProphet.one_sample_sharp
+      file: OAI/Probability/MatroidProphet/Main.lean
 
     - comparator_config: ComparatorChallenges/MaximalSeshadriConstants.json
       declaration: OAI.MaximalSeshadri.Geometry.maximalSeshadriConstants

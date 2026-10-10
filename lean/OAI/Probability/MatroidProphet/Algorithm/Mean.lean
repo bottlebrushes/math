@@ -39,12 +39,12 @@ namespace MainAlgorithm
 variable {n : ℕ}
 
 noncomputable def mainMean (d : MainMasks n) (f : MainMasks n → ℝ) : ℝ :=
-  tripleMaskExpectation (fun _ => (1:ℝ)/4) (fun _ => thinningRate) (fun _ => thinningRate)
+  tripleMaskExpectation (fun _ => densityRate) (fun _ => thinningRate) (fun _ => thinningRate)
     univ (fun D C T => fairParityExpectation (fun p => f {withMasks d D C T with odd := p}))
 
 lemma mainMean_mono (d : MainMasks n) {f g : MainMasks n → ℝ}
     (h : ∀ d', d'.H = d.H → f d' ≤ g d') : mainMean d f ≤ mainMean d g := by
-  apply tripleMaskExpectation_mono _ _ _ (fun _ => by norm_num) (fun _ => by norm_num)
+  apply tripleMaskExpectation_mono _ _ _ (fun _ => by norm_num [densityRate]) (fun _ => by norm_num [densityRate])
     (fun _ => constants_positive.2.2.1.le) (fun _ => by norm_num [thinningRate])
     (fun _ => constants_positive.2.2.1.le) (fun _ => by norm_num [thinningRate])
   intro D hD C hC T hT
@@ -71,6 +71,14 @@ lemma mainMean_guard_count (d : MainMasks n) (K : Finset (Fin n)) :
     rw [bitsExpectation_card_inter _ univ K (subset_univ _)]
     simp [mul_comm]
   rw [hc]
+
+lemma mainMean_density_count (d : MainMasks n) (K : Finset (Fin n)) :
+    mainMean d (fun d' => ((d'.D ∩ K).card : ℝ)) = densityRate * K.card := by
+  unfold mainMean tripleMaskExpectation MainAlgorithm.withMasks
+  simp only [fairParityExpectation_const, bitsExpectation_const]
+  simp_rw [Finset.inter_comm _ K]
+  rw [bitsExpectation_card_inter _ univ K (subset_univ _)]
+  simp [mul_comm]
 
 end MainAlgorithm
 end MatroidProphet

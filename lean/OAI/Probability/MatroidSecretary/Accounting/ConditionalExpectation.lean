@@ -22,7 +22,7 @@ theorem all_orders_conditional_expectation {n : ℕ}
     (M : Matroid (Fin n)) (hE : M.E = Set.univ)
     (d : MainMasks n) (w : Fin n → Option ℤ) (h : ℕ)
     (A : Finset (Fin n)) (hA : Disjoint A (pathGroups M d w h)) :
-    thinningRate * (finalRankStatistic M hE (2^100)
+    thinningRate * (finalRankStatistic M hE ruleKappa
       (groupMask M d w d.D) (groupMask M d w d.C)
       (fun j => (A : Set (Fin n)) ∩ (pathGroups M d w j : Set (Fin n)))
       h (groups M d w).length (pathGroups M d w h)

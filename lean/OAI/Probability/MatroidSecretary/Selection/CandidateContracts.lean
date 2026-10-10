@@ -22,12 +22,12 @@ theorem candidate_mass {n : ℕ} (M : Matroid (Fin n))
     let Y := fun H => positiveGreedy M a \ H
     let U := candidateLabels M a
     (∀ H, M.Indep (Y H : Set (Fin n)) ∧ Y H ⊆ U H) ∧
-    bitsExpectation (fun _ => (1 / 2 : ℝ)) Finset.univ
+    bitsExpectation (fun _ => filterRate) Finset.univ
       (fun H => ∑ e ∈ Y H, roundedWeight weightBase (w e)) =
-        optimum M (fun e => roundedWeight weightBase (w e)) / 2 ∧
-    bitsExpectation (fun _ => (1 / 2 : ℝ)) Finset.univ
+        (1 - filterRate) * optimum M (fun e => roundedWeight weightBase (w e)) ∧
+    filterRate * bitsExpectation (fun _ => filterRate) Finset.univ
       (fun H => ∑ e ∈ U H, roundedWeight weightBase (w e)) ≤
-        optimum M (fun e => roundedWeight weightBase (w e)) := by
+        (1 - filterRate) * optimum M (fun e => roundedWeight weightBase (w e)) := by
   dsimp only
   refine ⟨?_, ?_, ?_⟩
   · intro H

@@ -52,16 +52,16 @@ lemma listedTransferGap_expectation_le (M : Matroid (Fin n)) (hE : M.E = Set.uni
     (d : MainMasks n) (s : Fin n → Option ℤ) (i : ℤ) (Y : Set (Fin n))
     (hY : Y ⊆ (trueGroup M d s i : Set (Fin n)))
     (hn : densityThreshold ≤ ((trueGroup M d s i).card : ℝ)) (ε : Fin 2) :
-    tripleMaskExpectation (fun _ => (1:ℝ)/4) (fun _ => thinningRate) (fun _ => thinningRate)
-      univ (fun A B C => listedTransferGap M hE (2^100) (withMasks d A B C) s i Y ε) ≤
-      2 * residualDelta * (trueGroup M d s i).card := by
+    tripleMaskExpectation (fun _ => densityRate) (fun _ => thinningRate) (fun _ => thinningRate)
+      univ (fun A B C => listedTransferGap M hE ruleKappa (withMasks d A B C) s i Y ε) ≤
+      residualError * (trueGroup M d s i).card := by
   rw [tripleMaskExpectation_split _ _ _ univ (trueGroup M d s i) (subset_univ _)]
   have ht0 : 0 ≤ thinningRate := constants_positive.2.2.1.le
   have ht1 : thinningRate ≤ 1 := by norm_num [thinningRate]
   calc
-    _ ≤ tripleMaskExpectation (fun _ => (1:ℝ)/4) (fun _ => thinningRate) (fun _ => thinningRate)
-        (univ \ trueGroup M d s i) (fun _ _ _ => 2 * residualDelta * (trueGroup M d s i).card) := by
-      apply tripleMaskExpectation_mono _ _ _ (fun _ => by norm_num) (fun _ => by norm_num)
+    _ ≤ tripleMaskExpectation (fun _ => densityRate) (fun _ => thinningRate) (fun _ => thinningRate)
+        (univ \ trueGroup M d s i) (fun _ _ _ => residualError * (trueGroup M d s i).card) := by
+      apply tripleMaskExpectation_mono _ _ _ (fun _ => by norm_num [densityRate]) (fun _ => by norm_num [densityRate])
         (fun _ => ht0) (fun _ => ht1) (fun _ => ht0) (fun _ => ht1)
       intro D hD C hC T hT
       have hh := focalTransferGap_expectation_le M hE (withMasks d D C T) s i Y hY hn ε
@@ -76,15 +76,20 @@ lemma listedTransferGap_parity_expectation_le (M : Matroid (Fin n)) (hE : M.E = 
     (d : MainMasks n) (s : Fin n → Option ℤ) (i : ℤ) (Y : Set (Fin n))
     (hY : Y ⊆ (trueGroup M d s i : Set (Fin n)))
     (hn : densityThreshold ≤ ((trueGroup M d s i).card : ℝ)) :
-    tripleMaskExpectation (fun _ => (1:ℝ)/4) (fun _ => thinningRate) (fun _ => thinningRate)
+    tripleMaskExpectation (fun _ => densityRate) (fun _ => thinningRate) (fun _ => thinningRate)
       univ (fun A B C => fairParityExpectation (fun p =>
-        listedTransferGap M hE (2^100) (withMasks d A B C) s i Y (boolParity p))) ≤
-      2 * residualDelta * (trueGroup M d s i).card := by
+        listedTransferGap M hE ruleKappa (withMasks d A B C) s i Y (boolParity p))) ≤
+      residualError * (trueGroup M d s i).card := by
   have h0 := listedTransferGap_expectation_le M hE d s i Y hY hn (boolParity false)
   have h1 := listedTransferGap_expectation_le M hE d s i Y hY hn (boolParity true)
   simp only [fairParityExpectation, div_eq_mul_inv, mul_comm _ ((2:ℝ)⁻¹)]
   rw [tripleMaskExpectation_mul, tripleMaskExpectation_add]
-  linarith
+  have hs := add_le_add h0 h1
+  calc
+    _ ≤ 2⁻¹ * (residualError * (trueGroup M d s i).card +
+        residualError * (trueGroup M d s i).card) :=
+      mul_le_mul_of_nonneg_left hs (by norm_num)
+    _ = _ := by ring
 
 end MainAlgorithm
 end MatroidProphet

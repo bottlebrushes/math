@@ -54,7 +54,7 @@ theorem transfer_keys {n : ℕ} (M : Matroid (Fin n)) (hE : M.E = Set.univ)
     let U := trueGroup M d s i
     let Y := (positiveGreedy M s \ H).filter (fun e => s e = some i)
     densityThreshold ≤ (U.card : ℝ) →
-      ((((2 : ℝ)^16)⁻¹ * Y.card - ((2 : ℝ)^23)⁻¹ * U.card) / (2 : ℝ)^100) ≤
+      ((retainedFraction * Y.card - transferError * U.card) / densityThreshold) ≤
         mainMean d (fun d' => (trueZ M hE d' s i : ℝ)) := by
   classical
   dsimp only
@@ -70,10 +70,10 @@ theorem transfer_keys {n : ℕ} (M : Matroid (Fin n)) (hE : M.E = Set.univ)
     (positiveGreedy_survivors_indep M hE s H).subset
       (fun _ he => (mem_filter.mp he).1)
   have h := mainMean_trueZ_lower M hE d s i (Y : Set (Fin n)) hY hI hn
-  simpa only [Set.ncard_coe_finset, retainedFraction, densityThreshold, d, Y] using h
+  simpa only [Set.ncard_coe_finset, d, Y] using h
 
 /-- `lem:transfer` for the manuscript's actual rounded nonnegative weights,
-with literal constants gamma = 2^-16 and kappa = 2^100. -/
+with the sharpened constants `retainedFraction` and `transferError` and `κ = ruleKappa`. -/
 theorem transfer {n : ℕ} (M : Matroid (Fin n)) (hE : M.E = Set.univ)
     (w : Weights n) (_hw : ∀ e, 0 ≤ w e) (H : Finset (Fin n)) (i : ℤ) :
     let s : Fin n → Option ℤ := fun e => roundedLevel weightBase (w e)
@@ -81,7 +81,7 @@ theorem transfer {n : ℕ} (M : Matroid (Fin n)) (hE : M.E = Set.univ)
     let U := trueGroup M d s i
     let Y := (positiveGreedy M s \ H).filter (fun e => s e = some i)
     densityThreshold ≤ (U.card : ℝ) →
-      ((((2 : ℝ)^16)⁻¹ * Y.card - ((2 : ℝ)^23)⁻¹ * U.card) / (2 : ℝ)^100) ≤
+      ((retainedFraction * Y.card - transferError * U.card) / densityThreshold) ≤
         mainMean d (fun d' => (trueZ M hE d' s i : ℝ)) :=
   transfer_keys M hE (fun e => roundedLevel weightBase (w e)) H i
 

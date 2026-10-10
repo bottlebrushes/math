@@ -51,7 +51,7 @@ theorem safeSampleCount_lower (M : Matroid α) (hE : M.E = Set.univ)
     (hG : Pairwise (fun i j => Disjoint (G i) (G j))) (q : α → ℝ)
     (hq0 : ∀ e, 0 ≤ q e) (hq1 : ∀ e, q e ≤ 1)
     (h : ℕ) (I : Finset α) (hI : M.Indep (I : Set α)) :
-    (((2:ℝ)^12)⁻¹) / 4 * I.card - (D h).ncard / (κ:ℝ) ≤
+    exitMass / 2 * I.card - (D h).ncard / (2 * (κ:ℝ)) ≤
       bitsExpectation q univ (fun C => bitsExpectation q univ (fun T =>
         fairParityExpectation (safeSampleCount M hE κ D G h I C T))) := by
   have hpre := safeCountBeforeParity_lower M hE κ hκ D G hG q hq0 hq1 h I hI
@@ -65,7 +65,8 @@ theorem safeSampleCount_lower (M : Matroid α) (hE : M.E = Set.univ)
           apply bitsExpectation_congr; intro C hC; exact bitsExpectation_mul_right q univ _ _]
     exact bitsExpectation_mul_right q univ _ _
   rw [heq]
-  have hnonneg : 0 ≤ (D h).ncard / (κ:ℝ) := div_nonneg (Nat.cast_nonneg _) (Nat.cast_nonneg _)
+  have hloss : ((D h).ncard : ℝ) / (2 * (κ:ℝ)) = ((D h).ncard : ℝ) / (κ:ℝ) / 2 := by ring
+  rw [hloss]
   linarith
 
 omit [Fintype α] [DecidableEq α] in

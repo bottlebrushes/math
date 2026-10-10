@@ -1,6 +1,7 @@
 import OAI.Probability.MatroidProphet.Algorithm.WeightedPayoff
 import OAI.Probability.MatroidProphet.CompletePayoff
 import OAI.Probability.MatroidProphet.Reduction
+import OAI.Probability.MatroidProphet.Offset
 
 namespace OAI
 
@@ -10,10 +11,9 @@ open MeasureTheory Finset MainAlgorithm
 
 lemma main_branch_guarantee_small {n : ℕ} (M : Matroid (Fin n)) (hE : M.E = Set.univ)
     (w : Weights n)
-    (hm : maximumRounded M w ≤ optimum M (fun e => roundedWeight weightBase (w e)) /
-      (8 * densityThreshold)) :
-    thinningRate * retainedFraction / (16 * densityThreshold) *
-      optimum M (fun e => roundedWeight weightBase (w e)) ≤ mainPayoff M hE w := by
+    (hm : maximumRounded M w ≤
+      smallThreshold * optimum M (fun e => roundedWeight weightBase (w e))) :
+    mainFraction * optimum M (fun e => roundedWeight weightBase (w e)) ≤ mainPayoff M hE w := by
   apply main_branch_from_filter Finset.univ
     (analyzedComparisonMass M (fun e => roundedLevel weightBase (w e)))
     (comparisonMass M (fun e => roundedLevel weightBase (w e)))
@@ -30,32 +30,60 @@ lemma main_branch_guarantee_small {n : ℕ} (M : Matroid (Fin n)) (hE : M.E = Se
   · intro H _
     exact conditional_main_payoff M hE ⟨H, ∅, ∅, ∅, false⟩ _
 
-theorem complete_hidden_guarantee {n : ℕ} (M : Matroid (Fin n)) (hE : M.E = Set.univ)
+/-- The mixed rule keeps `roundedFraction` of the optimum of the rounded weights. -/
+theorem rounded_hidden_guarantee {n : ℕ} (M : Matroid (Fin n)) (hE : M.E = Set.univ)
     (w : Weights n) (hw : ∀ e, 0 ≤ w e) :
-    ((2 : ℝ) ^ 293)⁻¹ * optimum M w ≤
+    roundedFraction * optimum M (fun e => roundedWeight weightBase (w e)) ≤
       ∫ r, hiddenWorstReward (completeHiddenRule M hE) w r ∂sourceSeedLaw n := by
-  let W := optimum M (fun e => roundedWeight weightBase (w e))
-  have hb := branch_mixture_lower W (maximumRounded M w) (mainPayoff M hE w) (maximumPayoff M w)
+  have hb := branch_mixture_lower _ (maximumRounded M w) (mainPayoff M hE w) (maximumPayoff M w)
     (optimum_nonneg M _) (maximumRounded_nonneg M w) (mainPayoff_nonneg M hE w)
     (maximum_branch_guarantee M w hw) (main_branch_guarantee_small M hE w)
-  have hi := integrated_branch_lower M hE w hw
-  have hr := optimum_rounding_bound M weightBase (by norm_num [weightBase]) w hw
-  have hc0 : 0 ≤ thinningRate * retainedFraction / (32 * densityThreshold * weightBase) :=
-    div_nonneg (mul_nonneg constants_positive.2.2.1.le constants_positive.2.2.2.2.le)
-      (mul_nonneg (mul_nonneg (by norm_num) constants_positive.2.1.le) constants_positive.1.le)
-  have hscaled := mul_le_mul_of_nonneg_left hr hc0
-  have hcancel : thinningRate * retainedFraction / (32 * densityThreshold * weightBase) *
-      (weightBase * W) = thinningRate * retainedFraction / (32 * densityThreshold) * W := by
-    field_simp [ne_of_gt constants_positive.1, ne_of_gt constants_positive.2.1]
-  rw [hcancel] at hscaled
-  rw [hidden_fraction_exact] at hscaled
-  exact hscaled.trans (hb.trans hi)
+  exact hb.trans (integrated_branch_lower M hE w hw)
 
-theorem hidden_vector : HiddenVectorChallenge := by
+/-- Without the random offset the rule keeps `2⁻⁴⁶` of the true optimum. -/
+theorem complete_hidden_guarantee {n : ℕ} (M : Matroid (Fin n)) (hE : M.E = Set.univ)
+    (w : Weights n) (hw : ∀ e, 0 ≤ w e) :
+    ((2 : ℝ) ^ 46)⁻¹ * optimum M w ≤
+      ∫ r, hiddenWorstReward (completeHiddenRule M hE) w r ∂sourceSeedLaw n := by
+  let W := optimum M (fun e => roundedWeight weightBase (w e))
+  have hr := optimum_rounding_bound M weightBase (by norm_num [weightBase]) w hw
+  have hscaled := mul_le_mul_of_nonneg_left hr (by positivity : (0 : ℝ) ≤ ((2 : ℝ) ^ 46)⁻¹)
+  have hW : 0 ≤ W := optimum_nonneg M _
+  have hplain := mul_le_mul_of_nonneg_right plain_fraction hW
+  calc ((2 : ℝ) ^ 46)⁻¹ * optimum M w ≤ ((2 : ℝ) ^ 46)⁻¹ * (weightBase * W) := hscaled
+    _ = ((2 : ℝ) ^ 46)⁻¹ * weightBase * W := by ring
+    _ ≤ roundedFraction * W := hplain
+    _ ≤ _ := rounded_hidden_guarantee M hE w hw
+
+/-- The sharpened rule: the mixed rule run on weights scaled by a random power `2^{-m}`,
+`m ∈ {0, …, 7}`. -/
+noncomputable def sharpHiddenRule {n : ℕ} (M : Matroid (Fin n)) (hE : M.E = Set.univ) :
+    HiddenRule n (mainSeedBits n + 3) :=
+  offsetHiddenRule (completeHiddenRule M hE)
+
+/-- The sharpened rule keeps `2⁻³⁸` of the optimum against the full-seed adversary. -/
+theorem sharp_hidden_guarantee {n : ℕ} (M : Matroid (Fin n)) (hE : M.E = Set.univ)
+    (w : Weights n) (hw : ∀ e, 0 ≤ w e) :
+    ((2 : ℝ) ^ 38)⁻¹ * optimum M w ≤
+      ∫ r, hiddenWorstReward (sharpHiddenRule M hE) w r ∂offsetSeedLaw (sourceSeedLaw n) := by
+  have h := offset_guarantee M (completeHiddenRule M hE) (sourceSeedLaw n) roundedFraction
+    roundedFraction_nonneg (fun v hv => by
+      simpa only [weightBase] using rounded_hidden_guarantee M hE v hv) w hw
+  rwa [offset_fraction] at h
+
+theorem hidden_vector_sharp : HiddenVectorChallengeSharp := by
   intro n M hE
-  refine ⟨mainSeedBits n, sourceSeedLaw n, inferInstance, completeHiddenRule M hE, ?_, ?_⟩
-  · exact completeHiddenRule_feasible M hE
-  · exact complete_hidden_guarantee M hE
+  refine ⟨mainSeedBits n + 3, offsetSeedLaw (sourceSeedLaw n), inferInstance,
+    sharpHiddenRule M hE, ?_, ?_⟩
+  · exact offsetHiddenRule_feasible M _ (completeHiddenRule_feasible M hE)
+  · exact sharp_hidden_guarantee M hE
+
+theorem hidden_vector : HiddenVectorChallenge :=
+  hiddenVectorChallengeSharp_implies_hiddenVectorChallenge hidden_vector_sharp
+
+/-- The one-sample matroid prophet inequality with the sharpened constant `2⁻³⁸`. -/
+theorem one_sample_sharp.{u} : OneSampleChallengeSharp.{u} :=
+  hiddenVectorChallengeSharp_implies_oneSampleChallengeSharp hidden_vector_sharp
 
 theorem one_sample.{u} : OneSampleChallenge.{u} :=
   hiddenVectorChallenge_implies_oneSampleChallenge hidden_vector

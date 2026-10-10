@@ -16,7 +16,7 @@ theorem safeSampleCount_half_loss
     (hG : Pairwise (fun i j => Disjoint (G i) (G j)))
     (q : α → ℝ) (hq0 : ∀ e, 0 ≤ q e) (hq1 : ∀ e, q e ≤ 1)
     (h : ℕ) (I : Finset α) (hI : M.Indep (I : Set α)) :
-    (((2 : ℝ) ^ 12)⁻¹) / 4 * I.card - (D h).ncard / (2 * (κ : ℝ)) ≤
+    exitMass / 2 * I.card - (D h).ncard / (2 * (κ : ℝ)) ≤
       bitsExpectation q univ (fun C => bitsExpectation q univ (fun T =>
         fairParityExpectation (safeSampleCount M hE κ D G h I C T))) := by
   have hpre := safeCountBeforeParity_lower M hE κ hκ D G hG q hq0 hq1 h I hI
@@ -47,31 +47,18 @@ theorem listedSafeStatistic_exact_density
     (Y : Set (Fin n)) (hY : Y ⊆ (trueGroup M d s i : Set (Fin n)))
     (hI : M.Indep Y) (q : Fin n → ℝ)
     (hq0 : ∀ e, 0 ≤ q e) (hq1 : ∀ e, q e ≤ 1) :
-    exitThreshold / 4 * ((d.D : Set (Fin n)) ∩ Y).ncard -
+    exitMass / 2 * ((d.D : Set (Fin n)) ∩ Y).ncard -
         (d.D ∩ trueGroup M d s i).card / (κ : ℝ) ≤
       bitsExpectation q univ (fun C => bitsExpectation q univ (fun T =>
         fairParityExpectation (fun p =>
           (listedSafeStatistic M hE κ (withMasks d d.D C T) s i Y
             (boolParity p) : ℝ)))) := by
-  by_cases hi : i ∈ groups M d s
-  · have hsafe := safeLayerStatistic_lower M hE κ hκ (groupMask M d s d.D)
-      (groupGround M d s) (groupGround_disjoint M d s) q hq0 hq1
-      ((groups M d s).idxOf i) (trueGroup M d s i : Set (Fin n))
-      ((d.D : Set (Fin n)) ∩ Y) (Set.inter_subset_right.trans hY)
-      (hI.subset Set.inter_subset_right)
-    rw [groupMask_at_key M d s d.D _ i (groups_get?_idxOf M d s i hi),
-      Set.ncard_coe_finset] at hsafe
-    simpa only [listedSafeStatistic_guards M hE κ d s i Y,
-      hi, exitThreshold] using hsafe
-  · have hempty := unlisted_density_inter_empty M d s i hi Y hY
-    have hzero (C T : Finset (Fin n)) (p : Bool) :
-        listedSafeStatistic M hE κ (withMasks d d.D C T) s i Y
-          (boolParity p) = 0 := by
-      change (if i ∈ groups M d s then _ else 0) = 0
-      rw [ite_eq_right hi]
-    simp only [hempty, Set.ncard_empty, Nat.cast_zero, mul_zero, zero_sub,
-      hzero, fairParityExpectation, zero_add, zero_div, bitsExpectation_const]
-    exact neg_nonpos.mpr (div_nonneg (Nat.cast_nonneg _) (Nat.cast_nonneg _))
+  have h := listedSafeStatistic_fixed_density M hE κ hκ d s i Y hY hI q hq0 hq1
+  have hk : (0 : ℝ) < κ := by exact_mod_cast hκ
+  have hw : ((d.D ∩ trueGroup M d s i).card : ℝ) / (2 * (κ : ℝ)) ≤
+      ((d.D ∩ trueGroup M d s i).card : ℝ) / (κ : ℝ) :=
+    div_le_div_of_nonneg_left (Nat.cast_nonneg _) hk (by linarith)
+  linarith
 
 /-- Restricting the comparison set to this true group does not change its
 safe-label statistic. This permits the source's global independent set `Y`. -/
@@ -104,26 +91,26 @@ theorem safe_sampled_labels
     (M : Matroid (Fin n)) (hE : M.E = Set.univ)
     (d : MainMasks n) (s : Fin n → Option ℤ) (i : ℤ)
     (Y : Set (Fin n)) (hI : M.Indep Y) :
-    exitThreshold / 4 *
+    exitMass / 2 *
         ((d.D : Set (Fin n)) ∩ (Y ∩ (trueGroup M d s i : Set (Fin n)))).ncard -
         (d.D ∩ trueGroup M d s i).card / densityThreshold ≤
       bitsExpectation (fun _ => thinningRate) univ (fun C =>
         bitsExpectation (fun _ => thinningRate) univ (fun T =>
           fairParityExpectation (fun p =>
-            (listedSafeStatistic M hE (2 ^ 100) (withMasks d d.D C T) s i Y
+            (listedSafeStatistic M hE ruleKappa (withMasks d d.D C T) s i Y
               (boolParity p) : ℝ)))) := by
-  have hs := listedSafeStatistic_exact_density M hE (2 ^ 100) (by positivity)
+  have hs := listedSafeStatistic_exact_density M hE ruleKappa ruleKappa_pos
     d s i (Y ∩ (trueGroup M d s i : Set (Fin n))) Set.inter_subset_right
     (hI.subset Set.inter_subset_left) (fun _ => thinningRate)
     (fun _ => constants_positive.2.2.1.le)
     (fun _ => by norm_num [thinningRate])
   have heq (C T : Finset (Fin n)) (p : Bool) :
-      listedSafeStatistic M hE (2 ^ 100) (withMasks d d.D C T) s i
+      listedSafeStatistic M hE ruleKappa (withMasks d d.D C T) s i
         (Y ∩ (trueGroup M d s i : Set (Fin n))) (boolParity p) =
-      listedSafeStatistic M hE (2 ^ 100) (withMasks d d.D C T) s i Y
+      listedSafeStatistic M hE ruleKappa (withMasks d d.D C T) s i Y
         (boolParity p) := by
     simpa only [trueGroup_withMasks] using
-      listedSafeStatistic_inter_trueGroup M hE (2 ^ 100)
+      listedSafeStatistic_inter_trueGroup M hE ruleKappa
         (withMasks d d.D C T) s i Y (boolParity p)
   simpa only [Nat.cast_pow, Nat.cast_ofNat, densityThreshold, heq] using hs
 

@@ -74,10 +74,11 @@ theorem maximum_expectation_top_score (M : Matroid (Fin n))
       (setSeed H) g (by simpa using hgH) hqual π, Finset.sum_singleton]
   let P : Finset (Fin n) := Finset.univ.filter fun f =>
     M.Indep ({f} : Set (Fin n)) ∧ active (key (w f)) ∧ f ≠ g
+  rw [show score g / 4 = (1 / 2) * (1 - 1 / 2) * score g by ring]
   by_cases hP : P.Nonempty
   · obtain ⟨h, hhP, hsecond⟩ := exists_top (fun f => key (w f)) P hP
     have hh := (Finset.mem_filter.mp hhP).2
-    apply maximum_expectation_two Finset.univ g h (Finset.mem_univ _) (Finset.mem_univ _)
+    apply maximum_expectation_two (1 / 2) (by norm_num) (by norm_num) Finset.univ g h (Finset.mem_univ _) (Finset.mem_univ _)
       (Ne.symm hh.2.2) F (score g) hF
     intro H _ hgH hhH
     apply hsuccess H hgH
@@ -85,7 +86,8 @@ theorem maximum_expectation_top_score (M : Matroid (Fin n))
       g h hg hag hh.1 hh.2.1 htop
       (fun f hf haf hfg hfh => hsecond f (Finset.mem_filter.mpr ⟨Finset.mem_univ f, hf, haf, hfg⟩) hfh)
       (by simpa using hgH) (by simpa using hhH)
-  · apply maximum_expectation_one Finset.univ g (Finset.mem_univ _) F (score g)
+  · apply maximum_expectation_one (1 / 2) (by norm_num) (by norm_num) Finset.univ g
+      (Finset.mem_univ _) F (score g)
       (hscore g) hF
     intro H _ hgH
     apply hsuccess H hgH

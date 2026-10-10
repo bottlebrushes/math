@@ -71,7 +71,7 @@ theorem path_squared_exit_mass (M : Matroid α) (hE : M.E = Set.univ)
     (hG : Pairwise (fun i j => Disjoint (G i) (G j))) (q : α → ℝ)
     (hq0 : ∀ e, 0 ≤ q e) (hq1 : ∀ e, q e ≤ 1)
     (d : α) (hd : d ∉ M.closure ∅) (h : ℕ) :
-    (((2:ℝ)^12)⁻¹) / 2 ≤
+    exitMass ≤
       ∑ i ∈ range (pathHorizon h+1), bitsExpectation q univ (pathExitSquare M hE κ D G q d h i) := by
   rw [← reverse_square_eq_path_sum M hE κ D G h hG q d h le_rfl]
   exact reverse_squared_exit_mass M hE κ D G h hG q hq0 hq1 d hd h le_rfl

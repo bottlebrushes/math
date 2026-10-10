@@ -20,26 +20,30 @@ lemma tripleWeight_sum (t : ℝ) : (∑ x : MaskTriple, tripleWeight t x) = 1 :=
 lemma tripleWeight_nonneg {t : ℝ} (ht0 : 0 ≤ t) (ht1 : t ≤ 1)
     (x : MaskTriple) : 0 ≤ tripleWeight t x := by
   rcases x with ⟨h,d,c⟩
-  cases d <;> cases c <;> norm_num [tripleWeight] <;> linarith
+  have h1 : 0 ≤ 1 - t := by linarith
+  cases h <;> cases d <;> cases c <;>
+    simp only [tripleWeight, Bool.false_eq_true, ↓reduceIte] <;>
+    norm_num [filterRate, densityRate] <;> nlinarith
 
 lemma tripleWeight_zero (t : ℝ) :
-    tripleWeight t (false, false, false) = 3 / 8 * (1-t) := by
-  norm_num [tripleWeight]
+    tripleWeight t (false, false, false) = (1 - filterRate) * (1 - densityRate) * (1 - t) := by
+  simp [tripleWeight]
 
 lemma mainRevealRate_eq_source :
-    mainRevealRate = (5 : ℝ) / 8 + 3 * ((2 : ℝ)^143)⁻¹ := by
-  norm_num [mainRevealRate, thinningRate]
+    mainRevealRate =
+      filterRate + (1 - filterRate) * (densityRate + (1 - densityRate) * thinningRate) := by
+  unfold mainRevealRate
+  ring
 
 lemma mainRevealRate_pos : 0 < mainRevealRate := by
-  norm_num [mainRevealRate, thinningRate]
+  norm_num [mainRevealRate, thinningRate, filterRate, densityRate]
 
 lemma mainRevealRate_lt_one : mainRevealRate < 1 := by
-  norm_num [mainRevealRate, thinningRate]
+  norm_num [mainRevealRate, thinningRate, filterRate, densityRate]
 
 lemma mainRevealRate_complement :
     1 - mainRevealRate = tripleWeight thinningRate (false, false, false) := by
   simp [mainRevealRate, tripleWeight]
-  ring
 
 lemma tripleRevealed_eq_false (x : MaskTriple) :
     tripleRevealed x = false ↔ x = (false, false, false) := by
@@ -101,7 +105,8 @@ lemma revealBitWeight_sum : (∑ b : Bool, revealBitWeight b) = 1 := by
 lemma tripleWeight_source_pos (x : MaskTriple) :
     0 < tripleWeight thinningRate x := by
   rcases x with ⟨h,d,c⟩
-  cases d <;> cases c <;> norm_num [tripleWeight, thinningRate]
+  cases h <;> cases d <;> cases c <;>
+    norm_num [tripleWeight, thinningRate, filterRate, densityRate]
 
 /-- Exactly seven triples are compatible with an observed label. -/
 lemma card_revealed_triples :

@@ -1,0 +1,14 @@
+{
+  "challenge_module": "ComparatorChallenges.MatroidProphetSharp",
+  "solution_module": "OAI.Probability.MatroidProphet.Main",
+  "theorem_names": [
+    "OAI.MatroidProphet.one_sample_sharp"
+  ],
+  "definition_names": [],
+  "permitted_axioms": [
+    "propext",
+    "Quot.sound",
+    "Classical.choice"
+  ],
+  "enable_nanoda": false
+}

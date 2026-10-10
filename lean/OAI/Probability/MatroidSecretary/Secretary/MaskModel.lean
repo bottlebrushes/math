@@ -16,10 +16,18 @@ noncomputable def sourceMask {n : ℕ} (r : Seed (mainSeedBits n)) : Finset (Fin
     (mainMasks r).H ∪ (mainMasks r).D ∪ (mainMasks r).C
   else (mainMasks r).H
 
-/-- Literal branchwise Bernoulli rates from `sections/secretary.tex`.
-`false` is the maximum branch and `true` is the main branch. -/
-noncomputable def branchRate (j : Bool) : ℝ :=
-  if j then 5 / 8 + 3 * ((2 : ℝ) ^ 143)⁻¹ else 1 / 2
+/-- Branchwise Bernoulli rates of the sacrificed mask (`sections/secretary.tex`, with the
+sharpened mask rates). `false` is the maximum branch and `true` is the main branch. -/
+noncomputable def sacrificeRate (j : Bool) : ℝ :=
+  if j then filterRate + (1 - filterRate) * (densityRate + (1 - densityRate) * thinningRate)
+  else filterRate
+
+/-- Probability of each branch: the maximum branch has probability `branchRate`. -/
+noncomputable def branchWeight (j : Bool) : ℝ :=
+  if j then 1 - branchRate else branchRate
+
+lemma branchWeight_pos (j : Bool) : 0 < branchWeight j := by
+  cases j <;> norm_num [branchWeight, branchRate]
 
 end MatroidProphet.Secretary
 

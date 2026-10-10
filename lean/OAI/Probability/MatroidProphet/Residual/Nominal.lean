@@ -67,7 +67,7 @@ lemma integerResidualFamily_card_le_exp (M : Matroid α) (hE : M.E = Set.univ) (
     (U : Finset α) (κ : ℕ) (hκ : 2 ≤ κ) (F : ℤ → Set α) (a : ℤ) (ε : Fin 2)
     (K : ParityWindow a ε → Set α) (test : Fin n → α) (hn : U.card = n) :
     ((integerResidualFamily M U (U.card / κ) F a ε K test).card : ℝ) ≤
-      Real.exp (1000 * Real.log (κ : ℝ) / (κ : ℝ) * n) := by
+      Real.exp (Pivots.residualExponent (κ : ℝ) * n) := by
   apply card_residualFamily_le_exp M d U (U.card / κ) _ _ _ _ test
     (by simp [hE]) (by simp [hE]) (by simp [hE]) hn (κ : ℝ) (by exact_mod_cast hκ)
   have hkpos : (0 : ℝ) < κ := by exact_mod_cast (show 0 < κ by omega)

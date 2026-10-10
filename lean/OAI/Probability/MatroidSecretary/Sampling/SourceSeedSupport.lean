@@ -61,7 +61,11 @@ lemma mainBlockLaw_singleton_pos (n : ℕ) (q : Fin 5 → ℝ)
       · exact maskCoinLaw_singleton_pos n (q 2) (h0 2) (h1 2) C
       · apply prod_singleton_pos
         · exact maskCoinLaw_singleton_pos n (q 3) (h0 3) (h1 3) T
-        · exact maskCoinLaw_singleton_pos 2 (q 4) (h0 4) (h1 4) b
+        · have hp0 : ∀ j, 0 < lastCoinRate (q 4) j := by
+            intro j; unfold lastCoinRate; split_ifs <;> norm_num [h0 4]
+          have hp1 : ∀ j, lastCoinRate (q 4) j < 1 := by
+            intro j; unfold lastCoinRate; split_ifs <;> norm_num [h1 4]
+          exact bernoulliSeedLaw_singleton_pos (lastCoinRate (q 4)) hp0 hp1 b
 
 /-- The block encoding retains every bit; it is onto even for an empty ground set. -/
 lemma encodeMainSeed_surjective (n : ℕ) :
@@ -96,11 +100,11 @@ lemma mainSeedLaw_singleton_pos (n : ℕ) (q : Fin 5 → ℝ)
 
 lemma sourceCoinProbability_pos (j : Fin 5) : 0 < sourceCoinProbability j := by
   unfold sourceCoinProbability
-  split_ifs <;> norm_num [thinningRate]
+  split_ifs <;> norm_num [thinningRate, filterRate, densityRate, branchRate]
 
 lemma sourceCoinProbability_lt_one (j : Fin 5) : sourceCoinProbability j < 1 := by
   unfold sourceCoinProbability
-  split_ifs <;> norm_num [thinningRate]
+  split_ifs <;> norm_num [thinningRate, filterRate, densityRate, branchRate]
 
 /-- Every complete source seed has positive mass, with no exceptional labels or ranks. -/
 theorem sourceSeedLaw_singleton_pos (n : ℕ) (r : Seed (mainSeedBits n)) :

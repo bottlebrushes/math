@@ -50,41 +50,6 @@ lemma safeStatistic_le_witness_residual (M : Matroid α) (hE : M.E = Set.univ)
         (nominalLayerSet_disjoint M hE κ D C h U ε)]
       rfl
 
-lemma exists_captured_residual (M : Matroid α) (hE : M.E = Set.univ)
-    (κ : ℕ) (hκ : 0 < κ) (D C T : ℕ → Set α) (h : ℕ) (U : Finset α) (O I : Set α)
-    (hDU : D h ⊆ (U : Set α)) (hI : I ⊆ D h)
-    (hnonloop : ∀ e ∈ U, e ∉ M.closure ∅) (ε : Fin 2)
-    (hzsmall : nominalRankStatistic M hE κ D C T h (U : Set α) O ε ≤ U.card / κ) :
-    ∃ R ∈ labeledResidualFamily M U κ (guardedPath M hE κ D C h) (activation h) ε
-        (fun b => lowerCompetition M hE κ D C T b.val.val h),
-      (R : Set α) ⊆ O ∧ safeLayerStatistic M hE κ D C T h (U : Set α) I ε ≤
-        κ * nominalRankStatistic M hE κ D C T h (U : Set α) O ε + R.card := by
-  classical
-  obtain ⟨W, hW, hsum, hspan, Z, hZU, hZcard, β, hβ⟩ :=
-    nominal_rank_witnesses M hE κ D C T h U O ε
-  let R := (Set.toFinite (nominalResidualSet M hE κ D C T h (U : Set α) ε W)).toFinset
-  have hmask : (R : Set α) ⊆ O := by
-    intro e he
-    exact residualUnion_subset_mask M _ _ W O hspan ((Set.Finite.mem_toFinset _).mp he)
-  have hdet : safeLayerStatistic M hE κ D C T h (U : Set α) I ε ≤
-      κ * nominalRankStatistic M hE κ D C T h (U : Set α) O ε + R.card := by
-    have h := safeStatistic_le_witness_residual M hE κ D C T h (U : Set α) I hI ε W
-    rwa [hsum, Set.ncard_eq_toFinset_card] at h
-  refine ⟨R, ?_, hmask, hdet⟩
-  apply Finset.mem_image.mpr
-  refine ⟨integerResidual M (nominalPath M hE κ D C h) (groupLabel U) (activation h) ε
-      (fun b => lowerCompetition M hE κ D C T b.val.val h) (fun w : Z => w.val) β, ?_, ?_⟩
-  · apply nominal_residual_mem_family M hE κ hκ D C h U Z hDU hZU (hZcard.trans hzsmall) ε
-      (fun b => lowerCompetition M hE κ D C T b.val.val h)
-      (fun b => lowerCompetition_subset_guarded M hE κ D C T b.val.val h) β
-    · intro w
-      have hw : w.val ∈ W (β w) := by
-        rw [← hβ (β w)]
-        exact ⟨w, rfl, rfl⟩
-      exact (hW (β w) hw).1.2.2.2.1
-    · exact fun i => hnonloop _ (groupLabel_mem U i)
-  · exact nominalResidualSet_eq_labeled M hE κ D C T h U Z ε W β hβ
-
 end MatroidProphet
 
 end OAI

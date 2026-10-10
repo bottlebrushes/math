@@ -45,12 +45,12 @@ lemma groups_index_of_get (M : Matroid (Fin n)) (d : MainMasks n)
 
 noncomputable def groupBirthRegion (M : Matroid (Fin n)) (hE : M.E = Set.univ)
     (d : MainMasks n) (w : Fin n → Option ℤ) (h : ℕ) (b : ℤ) : Set (Fin n) :=
-  unobservedBirthRegion M hE (2^100) (groupMask M d w d.D) (groupMask M d w d.C)
+  unobservedBirthRegion M hE ruleKappa (groupMask M d w d.D) (groupMask M d w d.C)
     (groupMask M d w univ h) (d.H ∪ d.D ∪ d.C : Finset (Fin n)) h b
 
 noncomputable def competition (M : Matroid (Fin n)) (hE : M.E = Set.univ)
     (d : MainMasks n) (w : Fin n → Option ℤ) (h : ℕ) (b : ℤ) : Set (Fin n) :=
-  lowerCompetition M hE (2^100) (groupMask M d w d.D) (groupMask M d w d.C)
+  lowerCompetition M hE ruleKappa (groupMask M d w d.D) (groupMask M d w d.C)
     (groupMask M d w d.T) b h
 
 lemma groupBirthRegion_eligible (M : Matroid (Fin n)) (hE : M.E = Set.univ)
@@ -72,7 +72,7 @@ lemma groupBirthRegion_eligible (M : Matroid (Fin n)) (hE : M.E = Set.univ)
     have hbirth : birth M hE d w e i = b := by
       unfold birth
       rw [hidx]
-      exact (mem_nominal_difference_iff M hE (2^100) _ _ h e
+      exact (mem_nominal_difference_iff M hE ruleKappa _ _ h e
         (candidate_nonloop M d w e _ hc) b).mp hX
     have hel : eligible M hE d w e i := by
       refine ⟨hO, ?_, hi, ht, ?_, ?_, ?_⟩
@@ -99,10 +99,10 @@ lemma selection_low_mem_competition (M : Matroid (Fin n)) (hE : M.E = Set.univ)
   have hidx : (groups M d w).idxOf i < h := by
     by_contra hn
     exact hlow ⟨i, hwi, by omega⟩
-  apply lowerCompetition_member M hE (2^100) _ _ _ b hidx
+  apply lowerCompetition_member M hE ruleKappa _ _ _ b hidx
   constructor
   · exact ⟨hi.2.2.2.1, by simpa only [hwi] using hi.2.1, hwi.trans (groups_get?_idxOf M d w i hi.2.2.1).symm⟩
-  · apply (mem_nominal_difference_iff M hE (2^100) _ _ _ e
+  · apply (mem_nominal_difference_iff M hE ruleKappa _ _ _ e
       (candidate_nonloop M d w e _ hi.2.1) b).mpr
     exact hbi.trans hb
 

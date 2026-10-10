@@ -36,7 +36,7 @@ lemma labeledResidualFamily_card (M : Matroid α) (hE : M.E = Set.univ)
     (U : Finset α) (hU : U.Nonempty) (κ : ℕ) (hκ : 2 ≤ κ)
     (F : ℤ → Set α) (a : ℤ) (ε : Fin 2) (K : ParityWindow a ε → Set α) :
     ((labeledResidualFamily M U κ F a ε K).card : ℝ) ≤
-      Real.exp (1000 * Real.log (κ : ℝ) / (κ : ℝ) * U.card) := by
+      Real.exp (Pivots.residualExponent (κ : ℝ) * U.card) := by
   obtain ⟨d, hd⟩ := hU
   have hc : (labeledResidualFamily M U κ F a ε K).card ≤
       (integerResidualFamily M U (U.card / κ) F a ε K (groupLabel U)).card := Finset.card_image_le

@@ -17,8 +17,8 @@ lemma higherTrueGroups_card_eq_sum (M : Matroid (Fin n)) (d : MainMasks n)
 
 theorem conditional_main_payoff (M : Matroid (Fin n)) (hE : M.E = Set.univ)
     (d : MainMasks n) (w : Fin n → Option ℤ) :
-    thinningRate / (2 * densityThreshold) *
-      (retainedFraction * analyzedComparisonMass M w d.H - ((2:ℝ)^21)⁻¹ *
+    (1 - 1 / weightBase) * (thinningRate / densityThreshold) *
+      (retainedFraction * analyzedComparisonMass M w d.H - payoffError *
         ∑ e ∈ candidateLabels M w d.H, levelWeight weightBase (w e)) ≤
       mainMean d (fun d' => mainWorstRounded M hE d' w) := by
   classical
@@ -34,8 +34,8 @@ theorem conditional_main_payoff (M : Matroid (Fin n)) (hE : M.E = Set.univ)
   have hgroup (i : ℤ) (hi : i ∈ analyzedLevels M w d.H) :
       thinningRate / densityThreshold *
         (retainedFraction * (Y i).card -
-          (((2:ℝ)^23)⁻¹ + thinningRate * densityThreshold) * (trueGroup M d w i).card -
-          (1 + thinningRate * densityThreshold) *
+          (transferError + thinningRate * densityThreshold / 2) * (trueGroup M d w i).card -
+          (thinningRate * densityThreshold + densityRate) *
             ∑ l ∈ trueLevels M w d.H with i < l, ((trueGroup M d w l).card : ℝ)) ≤
         mainMean d (fun d' => (trueLambda M hE d' w i : ℝ)) := by
     have hn : densityThreshold ≤ ((trueGroup M d w i).card : ℝ) := by

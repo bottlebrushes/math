@@ -20,7 +20,7 @@ def TransferClaim : Prop :=
     let U := trueGroup M d s i
     let Y := (positiveGreedy M s \ H).filter (fun e => s e = some i)
     densityThreshold ≤ (U.card : ℝ) →
-      ((((2 : ℝ)^16)⁻¹ * Y.card - ((2 : ℝ)^23)⁻¹ * U.card) / (2 : ℝ)^100) ≤
+      ((retainedFraction * Y.card - transferError * U.card) / densityThreshold) ≤
         mainMean d (fun d' => (trueZ M hE d' s i : ℝ))
 
 end MatroidProphet

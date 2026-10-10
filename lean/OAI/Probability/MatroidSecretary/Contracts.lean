@@ -76,7 +76,7 @@ theorem all_orders {n : ℕ} (M : Matroid (Fin n)) (hE : M.E = Set.univ)
       ((selection M hE d w π).filter (fun e =>
         ∃ i, w e = some i ∧ h ≤ (groups M d w).idxOf i)).card) ∧
     (∀ A : Finset (Fin n), Disjoint A (pathGroups M d w h) →
-      thinningRate * (finalRankStatistic M hE (2^100)
+      thinningRate * (finalRankStatistic M hE ruleKappa
         (groupMask M d w d.D) (groupMask M d w d.C)
         (fun j => (A : Set (Fin n)) ∩ (pathGroups M d w j : Set (Fin n)))
         h (groups M d w).length (pathGroups M d w h)
@@ -89,7 +89,7 @@ theorem rank_cost {n : ℕ} (M : Matroid (Fin n)) (hE : M.E = Set.univ)
     (d : MainMasks n) (w : Fin n → Option ℤ) (h : ℕ)
     (hh : h < (groups M d w).length) :
     (listedZ M hE d w h : ℝ) ≤
-      (finalRankStatistic M hE (2^100) (groupMask M d w d.D)
+      (finalRankStatistic M hE ruleKappa (groupMask M d w d.D)
         (groupMask M d w d.C) (groupMask M d w d.T) h (groups M d w).length
         (groupMask M d w univ h)
         ((d.H ∪ d.D ∪ d.C : Finset (Fin n)) : Set (Fin n)) Set.univ
@@ -112,7 +112,7 @@ theorem exit {α : Type*} [Fintype α] [DecidableEq α] (M : Matroid α) (hE : M
         d ∈ t.before h ∧ d ∉ t.after h ∧
           reverseHazard M hE κ D G q d h t.time t.before < exitThreshold
       then (1 : ℝ) else 0) < 1 / 2 ∧
-    exitThreshold / 2 ≤ ∑ i ∈ range (pathHorizon h + 1),
+    exitMass ≤ ∑ i ∈ range (pathHorizon h + 1),
       bitsExpectation q univ (pathExitSquare M hE κ D G q d h i) := ExitContract.exit_mass_actual M hE κ D G hG q hq0 hq1 d hd h
 
 theorem secretary.{u} : MatroidProphet.SecretaryChallenge.{u} :=

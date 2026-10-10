@@ -41,16 +41,15 @@ lemma sum_zpow_lt_upper (B : ℝ) (hB : 1 < B) (s : Finset ℤ) (l : ℤ)
       simp only [he, sum_empty]
       exact div_pos (zpow_pos (zero_lt_one.trans hB) _) (sub_pos.mpr hB)
 
-lemma sum_zpow_le_two (B : ℝ) (hB : 2 ≤ B) (s : Finset ℤ) (l : ℤ)
+lemma sum_zpow_le_ratio (B : ℝ) (hB : 1 < B) (s : Finset ℤ) (l : ℤ)
     (hsl : ∀ i ∈ s, i ≤ l) :
-    (∑ i ∈ s, B ^ i) ≤ 2 * B ^ l := by
-  have hB1 : 1 < B := lt_of_lt_of_le (by norm_num) hB
-  have hs := sum_zpow_lt_upper B hB1 s (l+1) (fun i hi => by have := hsl i hi; omega)
-  have hp : 0 < B ^ l := zpow_pos (by linarith) _
-  have hden : 0 < B - 1 := by linarith
-  have hratio : B / (B - 1) ≤ 2 := (div_le_iff₀ hden).mpr (by linarith)
-  rw [zpow_add_one₀ (ne_of_gt (zero_lt_one.trans hB1)), mul_div_assoc] at hs
-  nlinarith
+    (∑ i ∈ s, B ^ i) ≤ B / (B - 1) * B ^ l := by
+  have hs := sum_zpow_lt_upper B hB s (l+1) (fun i hi => by have := hsl i hi; omega)
+  rw [zpow_add_one₀ (ne_of_gt (zero_lt_one.trans hB))] at hs
+  have hden : 0 < B - 1 := sub_pos.mpr hB
+  calc
+    _ ≤ B ^ l * B / (B - 1) := hs.le
+    _ = B / (B - 1) * B ^ l := by ring
 
 theorem higher_weight_cost (B : ℝ) (hB : 1 < B) (levels analyzed : Finset ℤ)
     (n : ℤ → ℝ) (hn : ∀ i ∈ levels, 0 ≤ n i) :
@@ -75,9 +74,9 @@ theorem higher_weight_cost (B : ℝ) (hB : 1 < B) (levels analyzed : Finset ℤ)
   simpa [div_mul_eq_mul_div] using hm
 
 theorem cumulative_weight_bound {α : Type*} [DecidableEq α]
-    (B : ℝ) (hB : 2 ≤ B) (A : Finset α) (level : α → ℤ) (analyzed : Finset ℤ) :
+    (B : ℝ) (hB : 1 < B) (A : Finset α) (level : α → ℤ) (analyzed : Finset ℤ) :
     (∑ i ∈ analyzed, B ^ i * ((A.filter (fun e => i ≤ level e)).card : ℝ)) ≤
-      2 * ∑ e ∈ A, B ^ level e := by
+      B / (B - 1) * ∑ e ∈ A, B ^ level e := by
   classical
   have heq : (∑ i ∈ analyzed, B ^ i * ((A.filter (fun e => i ≤ level e)).card : ℝ)) =
       ∑ e ∈ A, ∑ i ∈ analyzed with i ≤ level e, B ^ i := by
@@ -88,7 +87,7 @@ theorem cumulative_weight_bound {α : Type*} [DecidableEq α]
     rw [← sum_filter]
     simp [mul_comm]
   rw [heq, mul_sum]
-  exact sum_le_sum fun e _ => sum_zpow_le_two B hB _ _
+  exact sum_le_sum fun e _ => sum_zpow_le_ratio B hB _ _
     (fun i hi => (mem_filter.mp hi).2)
 
 end MatroidProphet

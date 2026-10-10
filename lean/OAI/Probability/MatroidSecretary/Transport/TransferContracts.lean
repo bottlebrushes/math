@@ -84,12 +84,12 @@ theorem sample_to_rank_contract (M : Matroid (Fin n)) (hE : M.E = Set.univ)
       ((trueGroup M d (fun e => roundedLevel weightBase (w e)) i).card : ℝ)) :
     let a := fun e => roundedLevel weightBase (w e)
     let Y := (positiveGreedy M a \ d.H).filter (fun e => a e = some i)
-    (retainedFraction * (Y.card : ℝ) - ((2 : ℝ) ^ 23)⁻¹ *
+    (retainedFraction * (Y.card : ℝ) - transferError *
       (trueGroup M d a i).card) / densityThreshold ≤
-      tripleMaskExpectation (fun _ => (1 : ℝ) / 4)
+      tripleMaskExpectation (fun _ => densityRate)
         (fun _ => thinningRate) (fun _ => thinningRate) Finset.univ
         (fun D C T => fairParityExpectation (fun p =>
-          (listedRankStatistic M hE (2 ^ 100) (withMasks d D C T) a i
+          (listedRankStatistic M hE ruleKappa (withMasks d D C T) a i
             (boolParity p) : ℝ))) := by
   classical
   let a := fun e => roundedLevel weightBase (w e)
