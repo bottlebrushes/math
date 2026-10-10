@@ -11,8 +11,8 @@ namespace MatroidProphet
 noncomputable def residualDelta : ℝ := 1 / 50
 
 theorem residual_error_constant :
-    densityThreshold⁻¹ + residualDelta + residualTail ≤ transferError := by
-  norm_num [densityThreshold, residualDelta, residualTail, transferError]
+    densityThreshold⁻¹ + residualError ≤ transferError := by
+  norm_num [densityThreshold, residualError, transferError]
 
 end MatroidProphet
 

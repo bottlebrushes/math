@@ -61,10 +61,10 @@ noncomputable def sharpHiddenRule {n : ℕ} (M : Matroid (Fin n)) (hE : M.E = Se
     HiddenRule n (mainSeedBits n + 3) :=
   offsetHiddenRule (completeHiddenRule M hE)
 
-/-- The sharpened rule keeps `2⁻⁴¹` of the optimum against the full-seed adversary. -/
+/-- The sharpened rule keeps `2⁻⁴⁰` of the optimum against the full-seed adversary. -/
 theorem sharp_hidden_guarantee {n : ℕ} (M : Matroid (Fin n)) (hE : M.E = Set.univ)
     (w : Weights n) (hw : ∀ e, 0 ≤ w e) :
-    ((2 : ℝ) ^ 41)⁻¹ * optimum M w ≤
+    ((2 : ℝ) ^ 40)⁻¹ * optimum M w ≤
       ∫ r, hiddenWorstReward (sharpHiddenRule M hE) w r ∂offsetSeedLaw (sourceSeedLaw n) := by
   have h := offset_guarantee M (completeHiddenRule M hE) (sourceSeedLaw n) roundedFraction
     roundedFraction_nonneg (fun v hv => by
@@ -81,7 +81,7 @@ theorem hidden_vector_sharp : HiddenVectorChallengeSharp := by
 theorem hidden_vector : HiddenVectorChallenge :=
   hiddenVectorChallengeSharp_implies_hiddenVectorChallenge hidden_vector_sharp
 
-/-- The one-sample matroid prophet inequality with the sharpened constant `2⁻⁴¹`. -/
+/-- The one-sample matroid prophet inequality with the sharpened constant `2⁻⁴⁰`. -/
 theorem one_sample_sharp.{u} : OneSampleChallengeSharp.{u} :=
   hiddenVectorChallengeSharp_implies_oneSampleChallengeSharp hidden_vector_sharp
 

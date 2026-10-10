@@ -13,13 +13,13 @@ def weightBase : ℝ := 2 ^ 8
 /-- Density rank charge `κ`; the rule uses the natural number `2^12`. -/
 def densityThreshold : ℝ := 2 ^ 12
 /-- Guard and test mask rate `t`. -/
-def thinningRate : ℝ := ((2 : ℝ) ^ 18)⁻¹
+def thinningRate : ℝ := ((2 : ℝ) ^ 17)⁻¹
 /-- Candidate-filter mask rate `p_H`. -/
 def filterRate : ℝ := 3 / 4
 /-- Density mask rate `p_D`. -/
 def densityRate : ℝ := 31 / 64
 /-- Probability of the maximum branch. -/
-def branchRate : ℝ := ((2 : ℝ) ^ 13)⁻¹
+def branchRate : ℝ := ((2 : ℝ) ^ 12)⁻¹
 /-- Low-hazard threshold of the paper's exit lemma (Lemma 4.2). -/
 def exitThreshold : ℝ := ((2 : ℝ) ^ 12)⁻¹
 /-- Squared exit mass per nonloop label. -/
@@ -28,10 +28,14 @@ def exitMass : ℝ := 6 / 25
 def retainedFraction : ℝ := 93 / 1600
 /-- Bound on the probability of the bad residual event. -/
 def residualTail : ℝ := ((2 : ℝ) ^ 10)⁻¹
+/-- Expected captured residual per label: `Λ/log 2 + 3/κ + 2^-17`. -/
+def residualError : ℝ := 1121 / 100000
 /-- Coefficient of the group size in the transfer lemma. -/
-def transferError : ℝ := 213 / 10000
+def transferError : ℝ := 115 / 10000
+/-- Cap on the density-generator budget: `⌊(9/16)|U|⌋ / κ`. -/
+def capBudget (n : ℕ) : ℕ := 9 * n / 16 / 2 ^ 12
 /-- Coefficient of the candidate mass in the weighted payoff. -/
-def payoffError : ℝ := 311 / 10000
+def payoffError : ℝ := 2915 / 100000
 /-- Small-maximum threshold factor `ε`; the threshold is `ε (1 - p_H) / κ`. -/
 def smallFraction : ℝ := ((2 : ℝ) ^ 8)⁻¹
 
@@ -75,8 +79,8 @@ lemma smallThreshold_nonneg : 0 ≤ smallThreshold := by
   norm_num [smallThreshold, smallFraction, filterRate, densityThreshold]
 
 /-- Fraction of the rounded optimum guaranteed by the mixed rule; after the random rounding
-offset it becomes `2^-41` of the true optimum. -/
-def roundedFraction : ℝ := ((2 : ℝ) ^ 41)⁻¹ * (8 * weightBase / (weightBase - 1))
+offset it becomes `2^-40` of the true optimum. -/
+def roundedFraction : ℝ := ((2 : ℝ) ^ 40)⁻¹ * (8 * weightBase / (weightBase - 1))
 
 lemma roundedFraction_nonneg : 0 ≤ roundedFraction := by
   norm_num [roundedFraction, weightBase]
@@ -97,11 +101,11 @@ theorem hidden_fraction_maximum :
 theorem plain_fraction : ((2 : ℝ) ^ 46)⁻¹ * weightBase ≤ roundedFraction := by
   norm_num [roundedFraction, weightBase]
 
-/-- With the offset: `roundedFraction · (1 - 2^-8)/8 = 2^-41`. -/
-theorem offset_fraction : roundedFraction * ((1 - 1 / 2 ^ 8) / 8) = ((2 : ℝ) ^ 41)⁻¹ := by
+/-- With the offset: `roundedFraction · (1 - 2^-8)/8 = 2^-40`. -/
+theorem offset_fraction : roundedFraction * ((1 - 1 / 2 ^ 8) / 8) = ((2 : ℝ) ^ 40)⁻¹ := by
   norm_num [roundedFraction, weightBase]
 
-theorem public_fraction_slack : ((2 : ℝ) ^ 310)⁻¹ ≤ ((2 : ℝ) ^ 41)⁻¹ := by
+theorem public_fraction_slack : ((2 : ℝ) ^ 310)⁻¹ ≤ ((2 : ℝ) ^ 40)⁻¹ := by
   apply inv_anti₀ (by positivity)
   exact pow_le_pow_right₀ (by norm_num) (by norm_num)
 

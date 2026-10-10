@@ -14,7 +14,7 @@ open scoped BigOperators
 
 namespace MatroidProphet
 
-/-- The one-sample challenge with the sharpened constant `2⁻⁴¹`. -/
+/-- The one-sample challenge with the sharpened constant `2⁻⁴⁰`. -/
 def OneSampleChallengeSharp.{u} : Prop :=
   ∀ (n : ℕ) (M : Matroid (Fin n)), M.E = Set.univ →
     ∃ (bits : ℕ) (ν : Measure (Seed bits)), IsProbabilityMeasure ν ∧
@@ -31,7 +31,7 @@ def OneSampleChallengeSharp.{u} : Prop :=
         Integrable (fun ω => optimum M (V ω)) μ →
         ∀ (π : Ω → ArrivalOrder n), Measurable π →
           Integrable (fun ω => reward A (R ω) (S ω) (V ω) (π ω)) μ ∧
-          ((2 : ℝ) ^ 41)⁻¹ * (∫ ω, optimum M (V ω) ∂μ) ≤
+          ((2 : ℝ) ^ 40)⁻¹ * (∫ ω, optimum M (V ω) ∂μ) ≤
             ∫ ω, reward A (R ω) (S ω) (V ω) (π ω) ∂μ
 
 end MatroidProphet

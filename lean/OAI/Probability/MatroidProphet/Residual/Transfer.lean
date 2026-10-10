@@ -44,7 +44,7 @@ lemma tripleMask_sample_to_rank (p q r : α → ℝ)
     (Y : ℝ)
     (hdet : ∀ D ⊆ V, ∀ C ⊆ V, ∀ T ⊆ V, σ D C T ≤ densityThreshold * z D C T + error D C T)
     (hsafe : retainedFraction * Y - (V.card : ℝ) / densityThreshold ≤ tripleMaskExpectation p q r V σ)
-    (herr : tripleMaskExpectation p q r V error ≤ (residualDelta + residualTail) * V.card) :
+    (herr : tripleMaskExpectation p q r V error ≤ residualError * V.card) :
     (retainedFraction * Y - transferError * V.card) / densityThreshold ≤
       tripleMaskExpectation p q r V z := by
   have hcompare := tripleMaskExpectation_mono p q r hp0 hp1 hq0 hq1 hr0 hr1 V hdet

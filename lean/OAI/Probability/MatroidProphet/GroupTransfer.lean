@@ -65,7 +65,7 @@ theorem listedRankStatistic_lower (M : Matroid (Fin n)) (hE : M.E = Set.univ)
       listedTransferGap M hE (2^12) (withMasks d D C T) s i Y (boolParity p)))
   have h1 : retainedFraction * Y.ncard - (trueGroup M d s i).card * densityThreshold⁻¹ ≤
       densityThreshold * Ez + Eg := hsafe.trans hmean
-  have h2 : Eg ≤ (residualDelta + residualTail) * (trueGroup M d s i).card := herr
+  have h2 : Eg ≤ residualError * (trueGroup M d s i).card := herr
   have h3 := hc
   nlinarith
 

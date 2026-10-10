@@ -54,13 +54,13 @@ lemma listedTransferGap_expectation_le (M : Matroid (Fin n)) (hE : M.E = Set.uni
     (hn : densityThreshold ≤ ((trueGroup M d s i).card : ℝ)) (ε : Fin 2) :
     tripleMaskExpectation (fun _ => densityRate) (fun _ => thinningRate) (fun _ => thinningRate)
       univ (fun A B C => listedTransferGap M hE (2^12) (withMasks d A B C) s i Y ε) ≤
-      (residualDelta + residualTail) * (trueGroup M d s i).card := by
+      residualError * (trueGroup M d s i).card := by
   rw [tripleMaskExpectation_split _ _ _ univ (trueGroup M d s i) (subset_univ _)]
   have ht0 : 0 ≤ thinningRate := constants_positive.2.2.1.le
   have ht1 : thinningRate ≤ 1 := by norm_num [thinningRate]
   calc
     _ ≤ tripleMaskExpectation (fun _ => densityRate) (fun _ => thinningRate) (fun _ => thinningRate)
-        (univ \ trueGroup M d s i) (fun _ _ _ => (residualDelta + residualTail) * (trueGroup M d s i).card) := by
+        (univ \ trueGroup M d s i) (fun _ _ _ => residualError * (trueGroup M d s i).card) := by
       apply tripleMaskExpectation_mono _ _ _ (fun _ => by norm_num [densityRate]) (fun _ => by norm_num [densityRate])
         (fun _ => ht0) (fun _ => ht1) (fun _ => ht0) (fun _ => ht1)
       intro D hD C hC T hT
@@ -79,15 +79,15 @@ lemma listedTransferGap_parity_expectation_le (M : Matroid (Fin n)) (hE : M.E = 
     tripleMaskExpectation (fun _ => densityRate) (fun _ => thinningRate) (fun _ => thinningRate)
       univ (fun A B C => fairParityExpectation (fun p =>
         listedTransferGap M hE (2^12) (withMasks d A B C) s i Y (boolParity p))) ≤
-      (residualDelta + residualTail) * (trueGroup M d s i).card := by
+      residualError * (trueGroup M d s i).card := by
   have h0 := listedTransferGap_expectation_le M hE d s i Y hY hn (boolParity false)
   have h1 := listedTransferGap_expectation_le M hE d s i Y hY hn (boolParity true)
   simp only [fairParityExpectation, div_eq_mul_inv, mul_comm _ ((2:ℝ)⁻¹)]
   rw [tripleMaskExpectation_mul, tripleMaskExpectation_add]
   have hs := add_le_add h0 h1
   calc
-    _ ≤ 2⁻¹ * ((residualDelta + residualTail) * (trueGroup M d s i).card +
-        (residualDelta + residualTail) * (trueGroup M d s i).card) :=
+    _ ≤ 2⁻¹ * (residualError * (trueGroup M d s i).card +
+        residualError * (trueGroup M d s i).card) :=
       mul_le_mul_of_nonneg_left hs (by norm_num)
     _ = _ := by ring
 
