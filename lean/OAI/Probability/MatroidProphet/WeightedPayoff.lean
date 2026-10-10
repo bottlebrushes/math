@@ -63,7 +63,7 @@ lemma source_weighted_group_payoff (levels analyzed : Finset ℤ) (hsub : analyz
     (N Y Λ : ℤ → ℝ) (hN : ∀ i ∈ levels, 0 ≤ N i)
     (hgroup : ∀ i ∈ analyzed,
       thinningRate / densityThreshold *
-        (retainedFraction * Y i - (transferError + thinningRate * densityThreshold) * N i -
+        (retainedFraction * Y i - (transferError + thinningRate * densityThreshold / 2) * N i -
           (thinningRate * densityThreshold + densityRate) * ∑ l ∈ levels with i < l, N l) ≤
         Λ i) :
     (1 - 1 / weightBase) * (thinningRate / densityThreshold) *
@@ -71,7 +71,7 @@ lemma source_weighted_group_payoff (levels analyzed : Finset ℤ) (hsub : analyz
         payoffError * ∑ i ∈ levels, weightBase ^ i * N i) ≤
       (1 - 1 / weightBase) * ∑ i ∈ analyzed, weightBase ^ i * Λ i := by
   apply weighted_group_payoff weightBase thinningRate densityThreshold retainedFraction
-    (transferError + thinningRate * densityThreshold)
+    (transferError + thinningRate * densityThreshold / 2)
     (thinningRate * densityThreshold + densityRate) payoffError (1 - 1 / weightBase)
     (by norm_num [weightBase]) constants_positive.2.2.1.le constants_positive.2.1
   · norm_num [transferError, thinningRate, densityThreshold]

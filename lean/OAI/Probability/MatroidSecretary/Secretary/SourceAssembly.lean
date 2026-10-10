@@ -29,7 +29,7 @@ theorem reconstructed_source_guarantee.{u} {n : ℕ} {Q : Type*}
   obtain ⟨hi, hl⟩ := reconstructed_product_lower (completeHiddenRule M hE) K decode
     νQ (Secretary.uniformArrivalLaw n) (sourceSeedLaw n) hproductLaw hproductMask
     w μ q σ π hq hσ hπ hqlaw hσlaw hind hprefix
-  have hslack : ((2 : ℝ) ^ 293)⁻¹ * optimum M w ≤ ((2 : ℝ) ^ 47)⁻¹ * optimum M w := by
+  have hslack : ((2 : ℝ) ^ 293)⁻¹ * optimum M w ≤ ((2 : ℝ) ^ 46)⁻¹ * optimum M w := by
     apply mul_le_mul_of_nonneg_right _ (optimum_nonneg M w)
     exact inv_anti₀ (by positivity) (pow_le_pow_right₀ (by norm_num) (by norm_num))
   exact ⟨hi, hslack.trans ((complete_hidden_guarantee M hE w hw).trans hl)⟩

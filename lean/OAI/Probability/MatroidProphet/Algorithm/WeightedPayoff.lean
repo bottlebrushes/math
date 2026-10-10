@@ -34,7 +34,7 @@ theorem conditional_main_payoff (M : Matroid (Fin n)) (hE : M.E = Set.univ)
   have hgroup (i : ℤ) (hi : i ∈ analyzedLevels M w d.H) :
       thinningRate / densityThreshold *
         (retainedFraction * (Y i).card -
-          (transferError + thinningRate * densityThreshold) * (trueGroup M d w i).card -
+          (transferError + thinningRate * densityThreshold / 2) * (trueGroup M d w i).card -
           (thinningRate * densityThreshold + densityRate) *
             ∑ l ∈ trueLevels M w d.H with i < l, ((trueGroup M d w l).card : ℝ)) ≤
         mainMean d (fun d' => (trueLambda M hE d' w i : ℝ)) := by

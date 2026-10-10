@@ -44,11 +44,12 @@ theorem listed_expected_nominal_to_final (M : Matroid (Fin n)) (hE : M.E = Set.u
       (listedZ M hE {d with T := T} w h : ℝ)) ≤
     densityThreshold * bitsExpectation (fun _ : Fin n => t) univ (fun T =>
       (listedLambda M hE {d with T := T} w h : ℝ)) +
-      t * ((2^12) * (groupMask M d w d.C h).ncard +
+      t * ((2^12) * ownGuardCost M hE (2^12) (groupMask M d w d.D) (groupMask M d w d.C) h
+          (boolParity d.odd) +
         ∑ j ∈ range ((groups M d w).length-(h+1)),
           ((2^12) * (groupMask M d w d.C (h+1+j)).ncard +
             (groupMask M d w d.D (h+1+j)).ncard) : ℕ) := by
-  have hc := expected_nominal_to_final M hE (2^12) (by positivity)
+  have hc := expected_nominal_to_final_own M hE (2^12) (by positivity)
     (groupMask M d w d.D) (groupMask M d w d.C) (pathGroups M d w)
     (pathGroups_disjoint M d w) h ((groups M d w).length-(h+1))
     ((d.H ∪ d.D ∪ d.C : Finset (Fin n)) : Set (Fin n)) (boolParity d.odd) t ht0 ht1

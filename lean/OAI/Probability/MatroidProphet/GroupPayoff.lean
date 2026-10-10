@@ -54,6 +54,44 @@ theorem mainMean_trueZ_lower (M : Matroid (Fin n)) (hE : M.E = Set.univ)
   rw [mainMean_trueZ]
   exact listedRankStatistic_lower M hE d w i Y hY hI hn
 
+/-- Own guards of a true group entering its layer bases (zero if the group is unlisted). -/
+noncomputable def trueOwn (M : Matroid (Fin n)) (hE : M.E = Set.univ)
+    (d : MainMasks n) (w : Fin n → Option ℤ) (i : ℤ) : ℕ := by
+  classical
+  exact if i ∈ groups M d w then
+    ownGuardCost M hE (2^12) (groupMask M d w d.D) (groupMask M d w d.C)
+      ((groups M d w).idxOf i) (boolParity d.odd) else 0
+
+/-- Averaged over the parity, at most half of the group's guards enter layer bases. -/
+lemma trueOwn_parity (M : Matroid (Fin n)) (hE : M.E = Set.univ)
+    (d : MainMasks n) (w : Fin n → Option ℤ) (i : ℤ) :
+    fairParityExpectation (fun p => (trueOwn M hE {d with odd := p} w i : ℝ)) ≤
+      ((d.C ∩ trueGroup M d w i).card : ℝ) / 2 := by
+  classical
+  have hsum : trueOwn M hE {d with odd := false} w i + trueOwn M hE {d with odd := true} w i ≤
+      (d.C ∩ trueGroup M d w i).card := by
+    by_cases hi : i ∈ groups M d w
+    · have hb := ownGuardCost_both M hE (2^12) (groupMask M d w d.D) (groupMask M d w d.C)
+        ((groups M d w).idxOf i)
+      have hc : (groupMask M d w d.C ((groups M d w).idxOf i)).ncard =
+          (d.C ∩ trueGroup M d w i).card := by
+        rw [groupMask_at_key M d w d.C _ i (groups_get?_idxOf M d w i hi), Set.ncard_coe_finset]
+      have h0 : trueOwn M hE {d with odd := false} w i = ownGuardCost M hE (2^12)
+          (groupMask M d w d.D) (groupMask M d w d.C) ((groups M d w).idxOf i) 0 := by
+        unfold trueOwn; exact ite_eq_left hi
+      have h1 : trueOwn M hE {d with odd := true} w i = ownGuardCost M hE (2^12)
+          (groupMask M d w d.D) (groupMask M d w d.C) ((groups M d w).idxOf i) 1 := by
+        unfold trueOwn; exact ite_eq_left hi
+      rw [h0, h1]; omega
+    · have h0 : ∀ p : Bool, trueOwn M hE {d with odd := p} w i = 0 := by
+        intro p; unfold trueOwn; exact ite_eq_right hi
+      rw [h0, h0]; omega
+  have hR : ((trueOwn M hE {d with odd := false} w i : ℕ) : ℝ) +
+      (trueOwn M hE {d with odd := true} w i : ℕ) ≤ (d.C ∩ trueGroup M d w i).card := by
+    exact_mod_cast hsum
+  unfold fairParityExpectation
+  linarith
+
 lemma true_expected_nominal_to_final (M : Matroid (Fin n)) (hE : M.E = Set.univ)
     (d : MainMasks n) (w : Fin n → Option ℤ) (i : ℤ)
     (t : ℝ) (ht0 : 0 ≤ t) (ht1 : t ≤ 1) :
@@ -61,26 +99,35 @@ lemma true_expected_nominal_to_final (M : Matroid (Fin n)) (hE : M.E = Set.univ)
       (trueZ M hE {d with T := T} w i : ℝ)) ≤
     densityThreshold * bitsExpectation (fun _ : Fin n => t) univ (fun T =>
       (trueLambda M hE {d with T := T} w i : ℝ)) +
-      t * (densityThreshold * (d.C ∩ trueGroup M d w i).card +
+      t * (densityThreshold * trueOwn M hE d w i +
         densityThreshold * (d.C ∩ higherTrueGroups M d w i).card +
           (d.D ∩ higherTrueGroups M d w i).card) := by
+  classical
   by_cases hi : i ∈ groups M d w
   · have hh : (groups M d w).idxOf i < (groups M d w).length := List.idxOf_lt_length_of_mem hi
     have hl := listed_expected_nominal_to_final M hE d w _ hh t ht0 ht1
-    have hc := listed_cost_le_true_counts M d w (groups_get?_idxOf M d w i hi) (2^12)
-    rw [← trueGroup_eq_candidate_filter M d w i] at hc
-    have hc' : (((2^12) * (groupMask M d w d.C ((groups M d w).idxOf i)).ncard +
+    have hc := listed_later_cost_le_true_counts M d w (groups_get?_idxOf M d w i hi) (2^12)
+    have hc' : (((2^12) * ownGuardCost M hE (2^12) (groupMask M d w d.D) (groupMask M d w d.C)
+          ((groups M d w).idxOf i) (boolParity d.odd) +
         ∑ j ∈ range ((groups M d w).length-((groups M d w).idxOf i+1)),
           ((2^12) * (groupMask M d w d.C ((groups M d w).idxOf i+1+j)).ncard +
             (groupMask M d w d.D ((groups M d w).idxOf i+1+j)).ncard) : ℕ) : ℝ) ≤
-        densityThreshold * (d.C ∩ trueGroup M d w i).card +
+        densityThreshold * trueOwn M hE d w i +
           densityThreshold * (d.C ∩ higherTrueGroups M d w i).card +
             (d.D ∩ higherTrueGroups M d w i).card := by
-      calc
-        _ ≤ (((2^12) * (d.C ∩ trueGroup M d w i).card +
-          (2^12) * (d.C ∩ higherTrueGroups M d w i).card +
-          (d.D ∩ higherTrueGroups M d w i).card : ℕ) : ℝ) := by exact_mod_cast hc
-        _ = _ := by norm_num [densityThreshold]
+      have hown : trueOwn M hE d w i = ownGuardCost M hE (2^12) (groupMask M d w d.D)
+          (groupMask M d w d.C) ((groups M d w).idxOf i) (boolParity d.odd) := by
+        unfold trueOwn; rw [ite_eq_left hi]
+      rw [hown]
+      have hcR : ((∑ j ∈ range ((groups M d w).length-((groups M d w).idxOf i+1)),
+          ((2^12) * (groupMask M d w d.C ((groups M d w).idxOf i+1+j)).ncard +
+            (groupMask M d w d.D ((groups M d w).idxOf i+1+j)).ncard) : ℕ) : ℝ) ≤
+          (((2^12) * (d.C ∩ higherTrueGroups M d w i).card +
+            (d.D ∩ higherTrueGroups M d w i).card : ℕ) : ℝ) := by
+        exact_mod_cast hc
+      push_cast at hcR ⊢
+      norm_num [densityThreshold] at hcR ⊢
+      linarith
     have hz (T : Finset (Fin n)) : trueZ M hE {d with T := T} w i =
         listedZ M hE {d with T := T} w ((groups M d w).idxOf i) := by
       change (if i ∈ groups M d w then _ else 0) = _
@@ -128,11 +175,34 @@ lemma mainMean_resample_test (d : MainMasks n) (f : MainMasks n → ℝ) :
         (fun T => f {withMasks d D C T with odd := p}))) = _
   rw [bitsExpectation_const, ← bitsExpectation_fairParity]
 
+/-- Own guards averaged over all masks and the parity. -/
+lemma mainMean_trueOwn (M : Matroid (Fin n)) (hE : M.E = Set.univ)
+    (d : MainMasks n) (w : Fin n → Option ℤ) (i : ℤ) :
+    mainMean d (fun d' => (trueOwn M hE d' w i : ℝ)) ≤
+      thinningRate * (trueGroup M d w i).card / 2 := by
+  have hpt : mainMean d (fun d' => (trueOwn M hE d' w i : ℝ)) ≤
+      mainMean d (fun d' => ((d'.C ∩ trueGroup M d w i).card : ℝ) / 2) := by
+    unfold mainMean
+    apply tripleMaskExpectation_mono _ _ _ (fun _ => by norm_num [densityRate])
+      (fun _ => by norm_num [densityRate])
+      (fun _ => constants_positive.2.2.1.le) (fun _ => by norm_num [thinningRate])
+      (fun _ => constants_positive.2.2.1.le) (fun _ => by norm_num [thinningRate])
+    intro D _ C _ T _
+    have h := trueOwn_parity M hE (withMasks d D C T) w i
+    rw [trueGroup_withMasks] at h
+    calc _ ≤ ((C ∩ trueGroup M d w i).card : ℝ) / 2 := by
+          simpa only [withMasks] using h
+      _ = _ := by simp [fairParityExpectation, withMasks]
+  have hc : mainMean d (fun d' => ((d'.C ∩ trueGroup M d w i).card : ℝ) / 2) =
+      thinningRate * (trueGroup M d w i).card / 2 := by
+    simp only [div_eq_mul_inv, mul_comm _ ((2 : ℝ)⁻¹), mainMean_mul, mainMean_guard_count]
+  exact hpt.trans_eq hc
+
 theorem mainMean_nominal_to_final (M : Matroid (Fin n)) (hE : M.E = Set.univ)
     (d : MainMasks n) (w : Fin n → Option ℤ) (i : ℤ) :
     densityThreshold * thinningRate * mainMean d (fun d' => (trueZ M hE d' w i : ℝ)) ≤
       densityThreshold * mainMean d (fun d' => (trueLambda M hE d' w i : ℝ)) +
-        thinningRate * (densityThreshold * thinningRate * (trueGroup M d w i).card +
+        thinningRate * (densityThreshold * (thinningRate / 2) * (trueGroup M d w i).card +
           densityThreshold * thinningRate * (higherTrueGroups M d w i).card +
             densityRate * (higherTrueGroups M d w i).card) := by
   have hmean : mainMean d (fun d' => densityThreshold * thinningRate *
@@ -141,20 +211,23 @@ theorem mainMean_nominal_to_final (M : Matroid (Fin n)) (hE : M.E = Set.univ)
       mainMean d (fun d' => densityThreshold *
         bitsExpectation (fun _ : Fin n => thinningRate) univ (fun T =>
           (trueLambda M hE {d' with T := T} w i : ℝ)) +
-        thinningRate * (densityThreshold * (d'.C ∩ trueGroup M d w i).card +
+        thinningRate * (densityThreshold * trueOwn M hE d' w i +
           densityThreshold * (d'.C ∩ higherTrueGroups M d w i).card +
             (d'.D ∩ higherTrueGroups M d w i).card)) := by
     apply mainMean_mono
     intro d' hH
     have hp := true_expected_nominal_to_final M hE d' w i thinningRate
       constants_positive.2.2.1.le (by norm_num [thinningRate])
-    rwa [trueGroup_eq_of_H_eq M d d' w i hH,
-      higherTrueGroups_eq_of_H_eq M d d' w i hH] at hp
-  simp only [mainMean_add, mainMean_mul, mainMean_const, mainMean_guard_count,
+    rwa [higherTrueGroups_eq_of_H_eq M d d' w i hH] at hp
+  simp only [mainMean_add, mainMean_mul, mainMean_guard_count,
     mainMean_density_count] at hmean
   rw [mainMean_resample_test d (fun d' => (trueZ M hE d' w i : ℝ)),
     mainMean_resample_test d (fun d' => (trueLambda M hE d' w i : ℝ))] at hmean
-  simpa only [mul_assoc] using hmean
+  have hown := mainMean_trueOwn M hE d w i
+  have hk : 0 ≤ densityThreshold * thinningRate := mul_nonneg constants_positive.2.1.le
+    constants_positive.2.2.1.le
+  have hown' := mul_le_mul_of_nonneg_left hown hk
+  nlinarith
 
 theorem true_group_payoff (M : Matroid (Fin n)) (hE : M.E = Set.univ)
     (d : MainMasks n) (w : Fin n → Option ℤ) (i : ℤ)
@@ -162,7 +235,7 @@ theorem true_group_payoff (M : Matroid (Fin n)) (hE : M.E = Set.univ)
     (hn : densityThreshold ≤ ((trueGroup M d w i).card : ℝ)) :
     thinningRate / densityThreshold *
         (retainedFraction * Y.ncard -
-          (transferError + thinningRate * densityThreshold) * (trueGroup M d w i).card -
+          (transferError + thinningRate * densityThreshold / 2) * (trueGroup M d w i).card -
           (thinningRate * densityThreshold + densityRate) * (higherTrueGroups M d w i).card) ≤
       mainMean d (fun d' => (trueLambda M hE d' w i : ℝ)) := by
   have hZ := mainMean_trueZ_lower M hE d w i Y hY hI hn

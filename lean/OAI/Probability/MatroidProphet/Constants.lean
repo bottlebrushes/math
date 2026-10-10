@@ -13,13 +13,13 @@ def weightBase : ℝ := 2 ^ 8
 /-- Density rank charge `κ`; the rule uses the natural number `2^12`. -/
 def densityThreshold : ℝ := 2 ^ 12
 /-- Guard and test mask rate `t`. -/
-def thinningRate : ℝ := ((2 : ℝ) ^ 19)⁻¹
+def thinningRate : ℝ := ((2 : ℝ) ^ 18)⁻¹
 /-- Candidate-filter mask rate `p_H`. -/
 def filterRate : ℝ := 3 / 4
 /-- Density mask rate `p_D`. -/
 def densityRate : ℝ := 31 / 64
 /-- Probability of the maximum branch. -/
-def branchRate : ℝ := ((2 : ℝ) ^ 14)⁻¹
+def branchRate : ℝ := ((2 : ℝ) ^ 13)⁻¹
 /-- Low-hazard threshold of the paper's exit lemma (Lemma 4.2). -/
 def exitThreshold : ℝ := ((2 : ℝ) ^ 12)⁻¹
 /-- Squared exit mass per nonloop label. -/
@@ -60,7 +60,7 @@ lemma retainedFraction_eq : retainedFraction = densityRate * exitMass / 2 := by
   norm_num [retainedFraction, densityRate, exitMass]
 
 lemma payoffError_ge :
-    transferError + thinningRate * densityThreshold +
+    transferError + thinningRate * densityThreshold / 2 +
       (thinningRate * densityThreshold + densityRate) / (weightBase - 1) ≤ payoffError := by
   norm_num [transferError, thinningRate, densityThreshold, densityRate, weightBase, payoffError]
 
@@ -75,8 +75,8 @@ lemma smallThreshold_nonneg : 0 ≤ smallThreshold := by
   norm_num [smallThreshold, smallFraction, filterRate, densityThreshold]
 
 /-- Fraction of the rounded optimum guaranteed by the mixed rule; after the random rounding
-offset it becomes `2^-42` of the true optimum. -/
-def roundedFraction : ℝ := ((2 : ℝ) ^ 42)⁻¹ * (8 * weightBase / (weightBase - 1))
+offset it becomes `2^-41` of the true optimum. -/
+def roundedFraction : ℝ := ((2 : ℝ) ^ 41)⁻¹ * (8 * weightBase / (weightBase - 1))
 
 lemma roundedFraction_nonneg : 0 ≤ roundedFraction := by
   norm_num [roundedFraction, weightBase]
@@ -93,15 +93,15 @@ theorem hidden_fraction_maximum :
   norm_num [roundedFraction, smallThreshold, smallFraction, filterRate, densityThreshold,
     branchRate, weightBase, maximumFactor]
 
-/-- Without the offset, the rule keeps `2^-47` of the true optimum. -/
-theorem plain_fraction : ((2 : ℝ) ^ 47)⁻¹ * weightBase ≤ roundedFraction := by
+/-- Without the offset, the rule keeps `2^-46` of the true optimum. -/
+theorem plain_fraction : ((2 : ℝ) ^ 46)⁻¹ * weightBase ≤ roundedFraction := by
   norm_num [roundedFraction, weightBase]
 
-/-- With the offset: `roundedFraction · (1 - 2^-8)/8 = 2^-42`. -/
-theorem offset_fraction : roundedFraction * ((1 - 1 / 2 ^ 8) / 8) = ((2 : ℝ) ^ 42)⁻¹ := by
+/-- With the offset: `roundedFraction · (1 - 2^-8)/8 = 2^-41`. -/
+theorem offset_fraction : roundedFraction * ((1 - 1 / 2 ^ 8) / 8) = ((2 : ℝ) ^ 41)⁻¹ := by
   norm_num [roundedFraction, weightBase]
 
-theorem public_fraction_slack : ((2 : ℝ) ^ 310)⁻¹ ≤ ((2 : ℝ) ^ 42)⁻¹ := by
+theorem public_fraction_slack : ((2 : ℝ) ^ 310)⁻¹ ≤ ((2 : ℝ) ^ 41)⁻¹ := by
   apply inv_anti₀ (by positivity)
   exact pow_le_pow_right₀ (by norm_num) (by norm_num)
 
