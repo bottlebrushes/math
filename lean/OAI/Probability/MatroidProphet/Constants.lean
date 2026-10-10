@@ -9,15 +9,15 @@ namespace MatroidProphet
 noncomputable section
 
 /-- Geometric level ratio `B`. -/
-def weightBase : ℝ := 2 ^ 6
+def weightBase : ℝ := 2 ^ 8
 /-- Density rank charge `κ`; the rule uses the natural number `2^12`. -/
 def densityThreshold : ℝ := 2 ^ 12
 /-- Guard and test mask rate `t`. -/
 def thinningRate : ℝ := ((2 : ℝ) ^ 19)⁻¹
 /-- Candidate-filter mask rate `p_H`. -/
-def filterRate : ℝ := 13 / 16
+def filterRate : ℝ := 3 / 4
 /-- Density mask rate `p_D`. -/
-def densityRate : ℝ := 15 / 32
+def densityRate : ℝ := 31 / 64
 /-- Probability of the maximum branch. -/
 def branchRate : ℝ := ((2 : ℝ) ^ 14)⁻¹
 /-- Low-hazard threshold of the paper's exit lemma (Lemma 4.2). -/
@@ -25,13 +25,13 @@ def exitThreshold : ℝ := ((2 : ℝ) ^ 12)⁻¹
 /-- Squared exit mass per nonloop label. -/
 def exitMass : ℝ := 6 / 25
 /-- Sample-to-rank coefficient `g = p_D · s / 2`. -/
-def retainedFraction : ℝ := 9 / 160
+def retainedFraction : ℝ := 93 / 1600
 /-- Bound on the probability of the bad residual event. -/
 def residualTail : ℝ := ((2 : ℝ) ^ 10)⁻¹
 /-- Coefficient of the group size in the transfer lemma. -/
 def transferError : ℝ := 213 / 10000
 /-- Coefficient of the candidate mass in the weighted payoff. -/
-def payoffError : ℝ := 367 / 10000
+def payoffError : ℝ := 311 / 10000
 /-- Small-maximum threshold factor `ε`; the threshold is `ε (1 - p_H) / κ`. -/
 def smallFraction : ℝ := ((2 : ℝ) ^ 8)⁻¹
 
@@ -74,19 +74,34 @@ lemma mainFraction_nonneg : 0 ≤ mainFraction := by
 lemma smallThreshold_nonneg : 0 ≤ smallThreshold := by
   norm_num [smallThreshold, smallFraction, filterRate, densityThreshold]
 
-/-- Final constant, main case: the main branch carries `2^-46` after rounding. -/
+/-- Fraction of the rounded optimum guaranteed by the mixed rule; after the random rounding
+offset it becomes `2^-42` of the true optimum. -/
+def roundedFraction : ℝ := ((2 : ℝ) ^ 42)⁻¹ * (8 * weightBase / (weightBase - 1))
+
+lemma roundedFraction_nonneg : 0 ≤ roundedFraction := by
+  norm_num [roundedFraction, weightBase]
+
+/-- Final constant, main case. -/
 theorem hidden_fraction_main :
-    ((2 : ℝ) ^ 46)⁻¹ * weightBase ≤ (1 - branchRate) * mainFraction := by
-  norm_num [mainFraction, weightBase, thinningRate, densityThreshold, filterRate,
-    retainedFraction, smallFraction, payoffError, branchRate]
+    roundedFraction ≤ (1 - branchRate) * mainFraction := by
+  norm_num [roundedFraction, mainFraction, weightBase, thinningRate, densityThreshold,
+    filterRate, retainedFraction, smallFraction, payoffError, branchRate]
 
 /-- Final constant, maximum case. -/
 theorem hidden_fraction_maximum :
-    ((2 : ℝ) ^ 46)⁻¹ * weightBase ≤ branchRate * (maximumFactor * smallThreshold) := by
-  norm_num [smallThreshold, smallFraction, filterRate, densityThreshold, branchRate, weightBase,
-    maximumFactor]
+    roundedFraction ≤ branchRate * (maximumFactor * smallThreshold) := by
+  norm_num [roundedFraction, smallThreshold, smallFraction, filterRate, densityThreshold,
+    branchRate, weightBase, maximumFactor]
 
-theorem public_fraction_slack : ((2 : ℝ) ^ 310)⁻¹ ≤ ((2 : ℝ) ^ 46)⁻¹ := by
+/-- Without the offset, the rule keeps `2^-47` of the true optimum. -/
+theorem plain_fraction : ((2 : ℝ) ^ 47)⁻¹ * weightBase ≤ roundedFraction := by
+  norm_num [roundedFraction, weightBase]
+
+/-- With the offset: `roundedFraction · (1 - 2^-8)/8 = 2^-42`. -/
+theorem offset_fraction : roundedFraction * ((1 - 1 / 2 ^ 8) / 8) = ((2 : ℝ) ^ 42)⁻¹ := by
+  norm_num [roundedFraction, weightBase]
+
+theorem public_fraction_slack : ((2 : ℝ) ^ 310)⁻¹ ≤ ((2 : ℝ) ^ 42)⁻¹ := by
   apply inv_anti₀ (by positivity)
   exact pow_le_pow_right₀ (by norm_num) (by norm_num)
 
@@ -95,7 +110,7 @@ theorem branch_mixture_lower (W maximumWeight mainPayoff maximumPayoff : ℝ)
     (hW : 0 ≤ W) (hmw : 0 ≤ maximumWeight) (hmain : 0 ≤ mainPayoff)
     (hmax : maximumFactor * maximumWeight ≤ maximumPayoff)
     (hsmall : maximumWeight ≤ smallThreshold * W → mainFraction * W ≤ mainPayoff) :
-    ((2 : ℝ) ^ 46)⁻¹ * weightBase * W ≤
+    roundedFraction * W ≤
       (1 - branchRate) * mainPayoff + branchRate * maximumPayoff := by
   have hr := rates_mem
   have hf : 0 ≤ maximumFactor := by norm_num [maximumFactor, filterRate]

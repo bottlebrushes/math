@@ -31,7 +31,7 @@ theorem hiddenVectorChallengeSharp_implies_oneSampleChallengeSharp.{u}
   let := hν
   refine ⟨bits, ν, hν, sampleSimulation A, sampleSimulation_feasible M A hA, ?_⟩
   intro Ω mΩ μ hμ S V R hS hV hR hSN hVN hi hlaw hseed hRlaw hopt π hπ
-  exact oneSample_of_hidden M A ν (((2 : ℝ) ^ 46)⁻¹) hA hbound
+  exact oneSample_of_hidden M A ν (((2 : ℝ) ^ 42)⁻¹) hA hbound
     μ S V R hS hV hR hSN hVN hi hlaw hseed hRlaw hopt π hπ
 
 theorem hiddenVectorChallengeSharp_implies_hiddenVectorChallenge
@@ -40,8 +40,8 @@ theorem hiddenVectorChallengeSharp_implies_hiddenVectorChallenge
   obtain ⟨bits, ν, hν, A, hA, hbound⟩ := hh n M hM
   refine ⟨bits, ν, hν, A, hA, fun w hw => le_trans ?_ (hbound w hw)⟩
   apply mul_le_mul_of_nonneg_right
-  · exact inv_anti₀ (pow_pos (by norm_num : (0 : ℝ) < 2) 46)
-      (pow_le_pow_right₀ (by norm_num : (1 : ℝ) ≤ 2) (by decide : 46 ≤ 293))
+  · exact inv_anti₀ (pow_pos (by norm_num : (0 : ℝ) < 2) 42)
+      (pow_le_pow_right₀ (by norm_num : (1 : ℝ) ≤ 2) (by decide : 42 ≤ 293))
   · exact optimum_nonneg M w
 
 end MatroidProphet

@@ -147,7 +147,7 @@ def HiddenVectorChallenge : Prop :=
         ((2 : ℝ) ^ 293)⁻¹ * optimum M w ≤
           ∫ r, hiddenWorstReward A w r ∂ν
 
-/-- The fixed-vector guarantee with the sharpened constant `2⁻⁴⁶`. -/
+/-- The fixed-vector guarantee with the sharpened constant `2⁻⁴²`. -/
 def HiddenVectorChallengeSharp : Prop :=
   ∀ (n : ℕ) (M : Matroid (Fin n)), M.E = Set.univ →
     ∃ (bits : ℕ) (ν : Measure (Seed bits)), IsProbabilityMeasure ν ∧
@@ -156,7 +156,7 @@ def HiddenVectorChallengeSharp : Prop :=
         ∀ (r : Seed bits) (π : ArrivalOrder n) (t : ℕ),
           M.Indep (hiddenAcceptedThrough A r w π t : Set (Fin n))) ∧
       ∀ (w : Weights n), (∀ e, 0 ≤ w e) →
-        ((2 : ℝ) ^ 46)⁻¹ * optimum M w ≤
+        ((2 : ℝ) ^ 42)⁻¹ * optimum M w ≤
           ∫ r, hiddenWorstReward A w r ∂ν
 
 end MatroidProphet
